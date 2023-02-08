@@ -16,32 +16,66 @@ class block_attendancetable extends block_base
         global $DB;
         global $PAGE;
         $id = required_param('id', PARAM_INT);
-        $allattendances = get_coursemodules_in_course('attendance', $id);
-        $attendanceparams = new mod_attendance_view_page_params(); // Page parameters, necessary to create mod_attendance_structure object.
+        $allAttendances = get_coursemodules_in_course('attendance', $id);
+        $attendanceParams = new mod_attendance_view_page_params(); // Page parameters, necessary to create mod_attendance_structure object.
 
-        $attendanceparams->studentid   = null;
-        $attendanceparams->view        = null;
-        $attendanceparams->curdate     = null;
-        $attendanceparams->mode        = 1;
-        $attendanceparams->groupby     = 'course';
-        $attendanceparams->sesscourses = 'current';
+        $attendanceParams->studentid   = null;
+        $attendanceParams->view        = null;
+        $attendanceParams->curdate     = null;
+        $attendanceParams->mode        = 1;
+        $attendanceParams->groupby     = 'course';
+        $attendanceParams->sesscourses = 'current';
 
-        if (count($allattendances) > 0) {
-            $firstattendance = $allattendances[array_keys($allattendances)[0]];
-            $course = $DB->get_record('course', array('id' => $id), '*', MUST_EXIST);
-            $attendance = $DB->get_record('attendance', array('id' => $firstattendance->instance), '*', MUST_EXIST);
+        if (count($allAttendances) > 0) {
+            $shownUsers = [];
 
-            $context = context_module::instance($firstattendance->id);
-
-            $attendanceparams->init($firstattendance);
-
-            $attstructure = new mod_attendance_structure($attendance, $firstattendance, $course, $context, $attendanceparams);
             $context_course = context_course::instance($id);
-            $dataattendancetable = new stdclass();
-            //$printattendancetable = new attendancetable_print_table($dataattendancetable, $attstructure, $context, $context_course, $firstattendance->id);
+            $users          = get_enrolled_users($context_course, '');
 
-            require_login($course, true, $firstattendance);
-            var_dump($attstructure);
+            $firstAttendance = $allAttendances[array_keys($allAttendances)[0]];
+            $course          = $DB->get_record('course', array('id' => $id), '*', MUST_EXIST);
+            $attendance      = $DB->get_record('attendance', array('id' => $firstAttendance->instance), '*', MUST_EXIST);
+            $context         = context_module::instance($firstAttendance->id);
+
+            require_login($course, true, $firstAttendance);
+
+            $attStructure = new mod_attendance_structure($attendance, $firstAttendance, $course, $context, $attendanceParams);
+            $attendanceParams->init($firstAttendance);
+
+            foreach ($users as $user) {
+                $roles = get_user_roles($context_course, $user->id, true);
+                $role = key($roles);
+                $rolename = $roles[$role]->shortname;
+                if ($rolename == "student") {
+                    $userdata = new attendance_user_data($attStructure, $user->id);
+                    $averagePercentage = 0;
+                    $count = 0;
+                    foreach ($userdata->coursesatts as $ca) {
+                        $userAttendanceSummary = new mod_attendance_summary($ca->attid, $user->id);
+                        //$totalSessions = $userAttendanceSummary->get_taken_sessions_summary_for($user->id)->numtakensessions;
+                        $totalSessions = 2;
+                        $percentageAttendance = format_float($userAttendanceSummary->get_taken_sessions_summary_for($user->id)->percentagesessionscompleted);
+                        if($percentageAttendance != 0) $averagePercentage += $percentageAttendance;
+                        $count++;
+                        if($count == $totalSessions) {
+                            if($percentageAttendance != 0) $averagePercentage /= $totalSessions;
+                            if (count($shownUsers) < 5) {
+                                array_push($shownUsers, $averagePercentage);
+                                $this->sortArray($shownUsers);
+                            } else {
+                                if (floatval($shownUsers[4]) > floatval($averagePercentage)) {
+                                    $shownUsers[4] = $percentageAttendance;
+                                    $this->sortArray($shownUsers);
+                                }
+                            }
+                            $count = 0;
+                            $averagePercentage = 0;
+                        }
+                    }
+                }
+            }
+            var_dump($shownUsers);
+            //var_dump($users);
             if ($this->content !== null) {
                 return $this->content;
             }
@@ -53,6 +87,21 @@ class block_attendancetable extends block_base
                                 </form></div>';
 
             return $this->content;
+        }
+    }
+
+    private function sortArray($array)
+    {
+        foreach ($array as $index => $item) {
+            if (count($array) > 1) {
+                for ($i = 0; $i < count($array); $i++) {
+                    if ($array[$index] > $array[$index + 1]) {
+                        $temp = $array[$index];
+                        $array[$index] = $array[$index + 1];
+                        $array[$index + 1] = $temp;
+                    }
+                }
+            }
         }
     }
 }
