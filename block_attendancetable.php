@@ -99,15 +99,15 @@ class block_attendancetable extends block_base
             }
 
             $this->content = new stdClass;
-            $this->content->text .= '<table style="width: 80%">';
+            $this->content->text .= '<div class="centerItem"><table>';
             foreach ($shownUsers as $shownUser) {
                 $this->content->text .=
                     '<tr>
                     <td>' . $shownUser[0] . "</td><td>" .  $shownUser[1] . '</td>
                 </tr>';
             }
-            $this->content->text .= '</table>';
-            $this->content->text .= '<div class="centerButton"> <form method="GET" action="../report/attendancetable/">
+            $this->content->text .= '</table></div>';
+            $this->content->text .= '<div class="centerItem"> <form method="GET" action="../report/attendancetable/">
                                     <input type="hidden" name="id" value="' . $id . '">
                                     <input class="btn btn-secondary" type="submit" value="' . get_string('goTo_text', 'block_attendancetable') . '" />
                                 </form></div>';

@@ -1,0 +1,24 @@
+.block_attendancetable .centerItem {
+    margin: 10px;
+    text-align: center;
+}
+
+.block_attendancetable table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.block_attendancetable td,
+th {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+    width: 50%;
+}
+
+.block_attendancetable tr:nth-child(even) {
+    background-color: #dddddd;
+}
