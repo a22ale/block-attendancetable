@@ -46,42 +46,45 @@ class block_attendancetable extends block_base
                 $roles = get_user_roles($context_course, $user->id, true);
                 $role = key($roles);
                 $rolename = $roles[$role]->shortname;
+                $totalUF = 0;
+                $totalPercentage = 0;
                 if ($rolename == "student") {
                     $userdata = new attendance_user_data($attStructure, $user->id);
                     $averagePercentage = 0;
-                    $count = 0;
                     foreach ($userdata->coursesatts as $ca) {
                         $userAttendanceSummary = new mod_attendance_summary($ca->attid, $user->id);
-                        //$totalSessions = $userAttendanceSummary->get_taken_sessions_summary_for($user->id)->numtakensessions;
-                        $totalSessions = 2;
-                        $percentageAttendance = format_float($userAttendanceSummary->get_taken_sessions_summary_for($user->id)->percentagesessionscompleted);
-                        if($percentageAttendance != 0) $averagePercentage += $percentageAttendance;
-                        $count++;
-                        if($count == $totalSessions) {
-                            if($percentageAttendance != 0) $averagePercentage /= $totalSessions;
-                            if (count($shownUsers) < 5) {
-                                array_push($shownUsers, $averagePercentage);
-                                $this->sortArray($shownUsers);
-                            } else {
-                                if (floatval($shownUsers[4]) > floatval($averagePercentage)) {
-                                    $shownUsers[4] = $percentageAttendance;
-                                    $this->sortArray($shownUsers);
-                                }
-                            }
-                            $count = 0;
-                            $averagePercentage = 0;
+                        $totalZeroes = 0;
+                        $totalPercentage += floatval(format_float($userAttendanceSummary->get_all_sessions_summary_for($user->id)->takensessionspercentage * 100));
+                        $totalUF++;
+                    }
+
+                    $averagePercentage = $totalPercentage / $totalUF;
+
+                    if (count($shownUsers) < 5) {
+                        array_push($shownUsers, [$user->firstname, $averagePercentage]);
+                        $shownUsers = $this->sortArray($shownUsers);
+                    } else {
+                        if ($shownUsers[count($shownUsers) - 1] > $averagePercentage) {
+                            $shownUsers[count($shownUsers) - 1] = [$user->firstname, $averagePercentage];
+                            $shownUsers = $this->sortArray($shownUsers);
                         }
                     }
                 }
             }
-            var_dump($shownUsers);
-            //var_dump($users);
             if ($this->content !== null) {
                 return $this->content;
             }
 
             $this->content = new stdClass;
-            $this->content->text = '<div class="centerButton"> <form method="GET" action="../report/attendancetable/">
+            $this->content->text .= '<table style="width: 80%">';
+            foreach ($shownUsers as $shownUser) {
+                $this->content->text .=
+                    '<tr>
+                    <td>' . $shownUser[0] . "</td><td>" .  $shownUser[1] . '</td>
+                </tr>';
+            }
+            $this->content->text .= '</table>';
+            $this->content->text .= '<div class="centerButton"> <form method="GET" action="../report/attendancetable/">
                                     <input type="hidden" name="id" value="' . $id . '">
                                     <input class="btn btn-secondary" type="submit" value="' . get_string('goTo_text', 'block_attendancetable') . '" />
                                 </form></div>';
@@ -92,16 +95,16 @@ class block_attendancetable extends block_base
 
     private function sortArray($array)
     {
-        foreach ($array as $index => $item) {
-            if (count($array) > 1) {
-                for ($i = 0; $i < count($array); $i++) {
-                    if ($array[$index] > $array[$index + 1]) {
-                        $temp = $array[$index];
-                        $array[$index] = $array[$index + 1];
-                        $array[$index + 1] = $temp;
-                    }
+        $len = count($array);
+        for ($i = 0; $i < $len; $i++) {
+            for ($j = 0; $j < $len - $i - 1; $j++) {
+                if ($array[$j][1] > $array[$j + 1][1]) {
+                    $temp = $array[$j];
+                    $array[$j] = $array[$j + 1];
+                    $array[$j + 1] = $temp;
                 }
             }
         }
+        return $array;
     }
 }
