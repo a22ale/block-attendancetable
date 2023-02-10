@@ -68,21 +68,29 @@ class block_attendancetable extends block_base
                 $roles = get_user_roles($context_course, $user->id, true);
                 $role = key($roles);
                 $rolename = $roles[$role]->shortname;
-                $totalUF = 0;
-                $totalPercentage = 0;
                 if ($rolename == "student") {
                     $userdata = new attendance_user_data($attStructure, $user->id);
                     $averagePercentage = 0;
+                    $totalUF = 0;
+                    $totalPercentage = 0;
                     foreach ($userdata->coursesatts as $ca) {
                         $userAttendanceSummary = new mod_attendance_summary($ca->attid, $user->id);
-                        $totalZeroes = 0;
-                        $totalPercentage += floatval(format_float($userAttendanceSummary->get_all_sessions_summary_for($user->id)->takensessionspercentage * 100));
-                        $totalUF++;
+                        $totalstats = 0;
+                        $ufPercentage = floatval(format_float($userAttendanceSummary->get_all_sessions_summary_for($user->id)->takensessionspercentage * 100));
+                        $userstats = $userAttendanceSummary->get_taken_sessions_summary_for($user->id)->userstakensessionsbyacronym[0] ?: null;
+                        $totalstats += $userstats['P'] ?: 0;
+                        $totalstats += $userstats['A'] ?: 0;
+                        $totalstats += $userstats['T'] ?: 0;
+                        $totalstats += $userstats['J'] ?: 0;
+                        if ($totalstats != 0) {
+                            $totalPercentage += $ufPercentage;
+                            $totalUF++;
+                        }
                     }
 
                     $averagePercentage = $totalPercentage / $totalUF;
 
-                    array_push($shownUsers, [$user->firstname, $averagePercentage]);
+                    if ($averagePercentage != 0) array_push($shownUsers, [$user->firstname, round($averagePercentage, 2)]);
                     $shownUsers = $this->sortArray($shownUsers);
                 }
                 $shownUsers = array_slice($shownUsers, 0, $this->config->amount ?: 5);
