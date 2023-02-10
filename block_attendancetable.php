@@ -36,8 +36,7 @@ class block_attendancetable extends block_base
 
     public function get_content()
     {
-        global $DB;
-        global $PAGE;
+        global $DB, $PAGE, $CFG;
         $id = required_param('id', PARAM_INT);
         $allAttendances = get_coursemodules_in_course('attendance', $id);
         $attendanceParams = new mod_attendance_view_page_params(); // Page parameters, necessary to create mod_attendance_structure object.
@@ -83,16 +82,10 @@ class block_attendancetable extends block_base
 
                     $averagePercentage = $totalPercentage / $totalUF;
 
-                    if (count($shownUsers) < 5) {
-                        array_push($shownUsers, [$user->firstname, $averagePercentage]);
-                        $shownUsers = $this->sortArray($shownUsers);
-                    } else {
-                        if ($shownUsers[count($shownUsers) - 1] > $averagePercentage) {
-                            $shownUsers[count($shownUsers) - 1] = [$user->firstname, $averagePercentage];
-                            $shownUsers = $this->sortArray($shownUsers);
-                        }
-                    }
+                    array_push($shownUsers, [$user->firstname, $averagePercentage]);
+                    $shownUsers = $this->sortArray($shownUsers);
                 }
+                $shownUsers = array_slice($shownUsers, 0, $this->config->amount ?: 5);
             }
             if ($this->content !== null) {
                 return $this->content;

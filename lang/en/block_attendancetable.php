@@ -25,3 +25,4 @@
 $string['pluginname'] = 'Attendance Table';
 $string['attendancetable'] = 'Attendance table';
 $string['goTo_text'] = 'Check attendance';
+$string['studentcount'] = 'Student count';

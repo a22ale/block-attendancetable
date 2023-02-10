@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<XMLDB PATH="blocks/attendancetable/db" VERSION="20230210"
+    COMMENT="XMLDB file for Moodle blocks/attendancetable"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd">
+    <TABLES>
+        <TABLE NAME="block_attendancetable"
+            COMMENT="Default comment for block_attendancetable, please edit me">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" />
+                <FIELD NAME="amount" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="5"
+                    SEQUENCE="false" />
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id" />
+            </KEYS>
+        </TABLE>
+    </TABLES>
+</XMLDB>
