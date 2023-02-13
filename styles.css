@@ -13,12 +13,12 @@
 
 .block_attendancetable td,
 th {
-    border: 1px solid #dddddd;
+    border: 1px solid #ced4da;
     text-align: left;
     padding: 8px;
     width: 50%;
 }
 
 .block_attendancetable tr:nth-child(even) {
-    background-color: #dddddd;
+    background-color: #ced4da;
 }

@@ -28,7 +28,7 @@ $capabilities = array(
     'block/attendancetable:view' => array(
         'riskbitmask' => RISK_SPAM | RISK_XSS,
 
-        'captype' => 'write',
+        'captype' => 'view',
         'contextlevel' => CONTEXT_BLOCK,
         'archetypes' => array(
             'teacher' => CAP_ALLOW,
@@ -36,8 +36,6 @@ $capabilities = array(
             'manager' => CAP_ALLOW,
             'user' => CAP_PREVENT
         ),
-
-        'clonepermissionsfrom' => 'moodle/block:view'
     ),
     'block/attendancetable:addinstance' => array(
         'riskbitmask' => RISK_SPAM | RISK_XSS,
@@ -49,6 +47,5 @@ $capabilities = array(
             'manager' => CAP_ALLOW
         ),
 
-        //'clonepermissionsfrom' => 'moodle/site:manageblocks'
     ),
 );
