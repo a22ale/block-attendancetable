@@ -23,8 +23,6 @@
  */
 
 defined('MOODLE_INTERNAL') || die();
-require_once "../config.php";
-require_once $CFG->dirroot . '/mod/attendance/locallib.php';
 
 
 class block_attendancetable extends block_base
@@ -37,6 +35,7 @@ class block_attendancetable extends block_base
     public function get_content()
     {
         global $DB, $PAGE, $CFG;
+        require_once $CFG->dirroot . '/mod/attendance/locallib.php';
         $id = required_param('id', PARAM_INT);
         $allAttendances = get_coursemodules_in_course('attendance', $id);
         $attendanceParams = new mod_attendance_view_page_params(); // Page parameters, necessary to create mod_attendance_structure object.
@@ -90,7 +89,7 @@ class block_attendancetable extends block_base
 
                     $averagePercentage = $totalPercentage / $totalUF;
 
-                    if ($averagePercentage != 0) array_push($shownUsers, [$user->firstname, round($averagePercentage, 2)]);
+                    if ($totalUF != 0) array_push($shownUsers, [$user->firstname, round($averagePercentage, 2)]);
                     $shownUsers = $this->sortArray($shownUsers);
                 }
                 $shownUsers = array_slice($shownUsers, 0, $this->config->amount ?: 5);

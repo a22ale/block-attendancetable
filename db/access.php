@@ -15,14 +15,40 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Basic information for Attendance table block
+ * Attendancetable block capabilities
  *
  * @package    block_attendancetable
  * @copyright  2023, Alexis Navas <a22alenavest@inspedralbes.cat> <alexisnavas98@hotmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2023021302;
-$plugin->requires = 2020061500;
-$plugin->component = 'block_attendancetable';
-$plugin->dependencies = array('mod_attendance' => 2021050702);
+$capabilities = array(
+
+    'block/attendancetable:view' => array(
+        'riskbitmask' => RISK_SPAM | RISK_XSS,
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_BLOCK,
+        'archetypes' => array(
+            'teacher' => CAP_ALLOW,
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW,
+            'user' => CAP_PREVENT
+        ),
+
+        'clonepermissionsfrom' => 'moodle/block:view'
+    ),
+    'block/attendancetable:addinstance' => array(
+        'riskbitmask' => RISK_SPAM | RISK_XSS,
+
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_BLOCK,
+        'archetypes' => array(
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW
+        ),
+
+        //'clonepermissionsfrom' => 'moodle/site:manageblocks'
+    ),
+);
