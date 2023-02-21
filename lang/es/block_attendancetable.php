@@ -15,13 +15,17 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Library for Attendance table block
+ * Static "es" text for Attendance table block
  *
  * @package    block_attendancetable
  * @copyright  2023, Alexis Navas <a22alenavest@inspedralbes.cat> <alexisnavas98@hotmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die;
-
-
+$string['pluginname'] = 'Tabla de asistencia';
+$string['attendancetable'] = 'Tabla de asistencia';
+$string['gototext'] = 'Resument de asistencia';
+$string['studentcount'] = 'Alumnos a mostrar';
+$string['tablestudent'] = 'Alumnos';
+$string['tablepercentage'] = '% de asistencia';
+$string['tablemessage'] = 'Alumnos con la menor asistencia';

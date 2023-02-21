@@ -22,7 +22,10 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = "Taula d'Assistència";
-$string['attendancetable'] = "Taula d'assistència";
-$string['goTo_text'] = "Resum d'assistència";
+$string['pluginname'] = 'Taula d\'Assistència';
+$string['attendancetable'] = 'Taula d\'assistència';
+$string['gototext'] = 'Resum d\'assistència';
 $string['studentcount'] = 'Alumnes a mostrar';
+$string['tablestudent'] = 'Alumnes';
+$string['tablepercentage'] = '% d\'assistència';
+$string['tablemessage'] = 'Alumnes amb la menor assistència';

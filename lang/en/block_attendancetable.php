@@ -24,5 +24,8 @@
 
 $string['pluginname'] = 'Attendance Table';
 $string['attendancetable'] = 'Attendance table';
-$string['goTo_text'] = 'Check attendance';
+$string['gototext'] = 'Check attendance';
 $string['studentcount'] = 'Student count';
+$string['tablestudent'] = 'Students';
+$string['tablepercentage'] = 'Attendance percentage';
+$string['tablemessage'] = 'Students with the lowest attendance';
