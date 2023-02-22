@@ -27,3 +27,15 @@ th {
     font-weight: bold;
     background-color: #ced4da;
 }
+
+.block_attendancetable .progressBar {
+    height: 1.6rem;
+}
+
+.block_attendancetable .progress-bar {
+    cursor: pointer;
+}
+
+.block_attendancetable .attendanceIcon {
+    width: 20px;
+}

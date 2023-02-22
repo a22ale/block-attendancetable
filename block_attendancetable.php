@@ -34,7 +34,7 @@ class block_attendancetable extends block_base
 
     public function get_content()
     {
-        global $DB, $PAGE, $CFG, $USER, $COURSE;
+        global $DB, $CFG, $USER, $COURSE;
         require_once $CFG->dirroot . '/mod/attendance/locallib.php';
         $id = required_param('id', PARAM_INT);
         $allattendances = get_coursemodules_in_course('attendance', $id);
@@ -73,6 +73,7 @@ class block_attendancetable extends block_base
                 has_capability('mod/attendance:view', $context)
             ) {
 
+                $this->page->requires->js('/blocks/attendancetable/lib.js');
                 $attendances = get_all_instances_in_course('attendance', $COURSE, null, true);
                 $userdata = new attendance_user_data($attstructure, $USER->id);
                 $sessioninfo = [];
@@ -83,6 +84,7 @@ class block_attendancetable extends block_base
                         // Don't display if this attendance is in recycle bin.
                         continue;
                     }
+
                     $context = context_module::instance($cmid, MUST_EXIST);
                     $attendance = $DB->get_record('attendance', ['id' => $cm->instance], '*', MUST_EXIST);
 
@@ -95,21 +97,42 @@ class block_attendancetable extends block_base
                         if ($logresult->statusid != NULL) {
                             $statussql = "SELECT * FROM mdl_attendance_statuses WHERE id = {$logresult->statusid};";
                             $statusresult = $DB->get_record_sql($statussql);
-                            array_push($sessioninfo, [date("d-m-Y", $session->sessdate), $statusresult->description]);
+                            array_push($sessioninfo, [date("d-m-Y", $session->sessdate), $statusresult->description, $attinst->name]);
                         }
                     }
                 }
                 $sessioninfo = $this->sort_array($sessioninfo, 'student');
                 $sessionscount = count($sessioninfo);
-                $this->content->text .= '<div class="progress">';
-                foreach ($sessioninfo as $session) {
+                $buttoncount = 0;
+                $this->content->text .= '<div class="progress border border-secondary progressBar rounded">';
+                foreach ($sessioninfo as $index => $session) {
+                    $button = '';
                     //$this->content->text .= '<p>' . $session[0] . ' ' . $session[1] . '</p>';
-                    $this->content->text .= '
-                    <div class="progress-bar bg-info" role="progressbar" style="width: ' . 100/$sessionscount . '%" aria-valuenow="33" aria-valuemin="0" aria-valuemax="100"></div>';
-                    
+                    switch ($session[1]) {
+                        case 'Absent':
+                            $button = 'bg-danger';
+                            break;
+                        case 'Present':
+                            $button = 'bg-success';
+                            break;
+                        case 'Late':
+                            $button = 'bg-warning';
+                            break;
+                        case 'Excused':
+                            $button = 'bg-info';
+                            break;
+                    }
+                    if ($index < $sessionscount - 1) {
+                        $button .= ' border-secondary border-right';
+                    }
+                    $buttonid = 'btatt-' . $buttoncount;
+                    $this->content->text .= "<div id=" . $buttonid . " onmouseover='showInfo(\"../blocks/attendancetable/pix/\", " . json_encode($session) . ")' class='progress-bar " . $button . "' role='progressbar' 
+                    style='width: " . 100 / $sessionscount . "%' aria-valuenow='" . 100 / $sessionscount . "' aria-valuemin='0' aria-valuemax='100'></div>";
+                    $buttoncount++;
                 }
-                $this->content->text .= '</div>';
-                
+                $this->content->text .= '</div><div><small id="hideOnHover">Passeu-hi el ratolí per a més informació.</small>
+                <div id="attendanceInfoBox" style="display: none;"></div></div>';
+
 
                 /*$this->content->text .= '<div class="progress">
                                             <div class="progress-bar" role="progressbar" style="width: 34%" aria-valuenow="33" aria-valuemin="0" aria-valuemax="100"></div>
