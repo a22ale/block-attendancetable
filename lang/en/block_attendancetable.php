@@ -31,5 +31,11 @@ $string['tablepercentage'] = 'Attendance percentage';
 $string['tablemessage'] = 'Students with the lowest attendance';
 $string['hovermessage'] = 'Hover for more information';
 $string['showbarheader'] = 'Show student bar';
+
 $string['yesoption'] = 'Yes';
 $string['nooption'] = 'No';
+
+$string['present'] = 'Present';
+$string['absent'] = 'Absent';
+$string['late'] = 'Late';
+$string['excused'] = 'Excused';

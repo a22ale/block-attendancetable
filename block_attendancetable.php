@@ -98,7 +98,7 @@ class block_attendancetable extends block_base
                             if ($logresult->statusid != NULL) {
                                 $statussql = "SELECT * FROM mdl_attendance_statuses WHERE id = {$logresult->statusid};";
                                 $statusresult = $DB->get_record_sql($statussql);
-                                array_push($sessioninfo, [date("d/m/Y H:i", $session->sessdate), $statusresult->description, $attinst->name]);
+                                array_push($sessioninfo, [date("d/m/Y H:i", $session->sessdate), $statusresult->description, get_string(strtolower($statusresult->description), 'block_attendancetable'), $attinst->name]);
                             }
                         }
                     }
