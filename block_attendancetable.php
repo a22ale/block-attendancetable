@@ -77,68 +77,71 @@ class block_attendancetable extends block_base
                 $attendances = get_all_instances_in_course('attendance', $COURSE, null, true);
                 $userdata = new attendance_user_data($attstructure, $USER->id);
                 $sessioninfo = [];
-                foreach ($attendances as $attinst) {
-                    $cmid = $attinst->coursemodule;
-                    $cm  = get_coursemodule_from_id('attendance', $cmid, 0, false, MUST_EXIST);
-                    if (!empty($cm->deletioninprogress)) {
-                        // Don't display if this attendance is in recycle bin.
-                        continue;
-                    }
+                if ($this->config->show ?: 1) {
+                    foreach ($attendances as $attinst) {
+                        $cmid = $attinst->coursemodule;
+                        $cm  = get_coursemodule_from_id('attendance', $cmid, 0, false, MUST_EXIST);
+                        if (!empty($cm->deletioninprogress)) {
+                            // Don't display if this attendance is in recycle bin.
+                            continue;
+                        }
 
-                    $context = context_module::instance($cmid, MUST_EXIST);
-                    $attendance = $DB->get_record('attendance', ['id' => $cm->instance], '*', MUST_EXIST);
+                        $context = context_module::instance($cmid, MUST_EXIST);
+                        $attendance = $DB->get_record('attendance', ['id' => $cm->instance], '*', MUST_EXIST);
 
-                    $sessionsql = "SELECT * FROM mdl_attendance_sessions WHERE attendanceid = {$attinst->id};";
-                    $sessionresult = $DB->get_records_sql($sessionsql);
-                    foreach ($sessionresult as $session) {
-                        $logsql = "SELECT * FROM mdl_attendance_log WHERE studentid = {$USER->id} AND sessionid={$session->id};";
-                        $logresult = $DB->get_record_sql($logsql);
+                        $sessionsql = "SELECT * FROM mdl_attendance_sessions WHERE attendanceid = {$attinst->id};";
+                        $sessionresult = $DB->get_records_sql($sessionsql);
+                        foreach ($sessionresult as $session) {
+                            $logsql = "SELECT * FROM mdl_attendance_log WHERE studentid = {$USER->id} AND sessionid={$session->id};";
+                            $logresult = $DB->get_record_sql($logsql);
 
-                        if ($logresult->statusid != NULL) {
-                            $statussql = "SELECT * FROM mdl_attendance_statuses WHERE id = {$logresult->statusid};";
-                            $statusresult = $DB->get_record_sql($statussql);
-                            array_push($sessioninfo, [date("d-m-Y", $session->sessdate), $statusresult->description, $attinst->name]);
+                            if ($logresult->statusid != NULL) {
+                                $statussql = "SELECT * FROM mdl_attendance_statuses WHERE id = {$logresult->statusid};";
+                                $statusresult = $DB->get_record_sql($statussql);
+                                array_push($sessioninfo, [date("d/m/Y H:i", $session->sessdate), $statusresult->description, $attinst->name]);
+                            }
                         }
                     }
-                }
-                $sessioninfo = $this->sort_array($sessioninfo, 'student');
-                $sessionscount = count($sessioninfo);
-                $buttoncount = 0;
-                $this->content->text .= '<div class="progress border border-secondary progressBar rounded">';
-                foreach ($sessioninfo as $index => $session) {
-                    $button = '';
-                    //$this->content->text .= '<p>' . $session[0] . ' ' . $session[1] . '</p>';
-                    switch ($session[1]) {
-                        case 'Absent':
-                            $button = 'bg-danger';
-                            break;
-                        case 'Present':
-                            $button = 'bg-success';
-                            break;
-                        case 'Late':
-                            $button = 'bg-warning';
-                            break;
-                        case 'Excused':
-                            $button = 'bg-info';
-                            break;
+                    $sessioninfo = $this->sort_array($sessioninfo, 'student');
+                    $sessionscount = count($sessioninfo);
+                    $buttoncount = 0;
+                    $this->content->text = html_writer::start_div("progress border border-secondary progressBar rounded");
+                    foreach ($sessioninfo as $index => $session) {
+                        $button = '';
+                        switch ($session[1]) {
+                            case 'Absent':
+                                $button = 'bg-danger';
+                                break;
+                            case 'Present':
+                                $button = 'bg-success';
+                                break;
+                            case 'Late':
+                                $button = 'bg-warning';
+                                break;
+                            case 'Excused':
+                                $button = 'bg-info';
+                                break;
+                        }
+                        if ($index < $sessionscount - 1) {
+                            $button .= ' border-secondary border-right';
+                        }
+                        $currentdiv = html_writer::start_div('progress-bar '  . $button, array('onmouseover' => 'showInfo("../blocks/attendancetable/pix/",' .
+                            json_encode($session) . ')', 'role' => 'progress-bar', 'style' => 'width: ' . 100 / $sessionscount . '%', 'aria-value' => 100 / $sessionscount));
+                        $currentdiv .= html_writer::end_div();
+                        $this->content->text .= $currentdiv;
+                        $buttoncount++;
                     }
-                    if ($index < $sessionscount - 1) {
-                        $button .= ' border-secondary border-right';
-                    }
-                    $buttonid = 'btatt-' . $buttoncount;
-                    $this->content->text .= "<div id=" . $buttonid . " onmouseover='showInfo(\"../blocks/attendancetable/pix/\", " . json_encode($session) . ")' class='progress-bar " . $button . "' role='progressbar' 
-                    style='width: " . 100 / $sessionscount . "%' aria-valuenow='" . 100 / $sessionscount . "' aria-valuemin='0' aria-valuemax='100'></div>";
-                    $buttoncount++;
+                    $this->content->text .= html_writer::end_div();
+                    $divunderbar .= html_writer::start_div();
+                    $small = html_writer::start_tag('small', array('id' => 'hideOnHover'));
+                    $small .= get_string('hovermessage', 'block_attendancetable');
+                    $small .= html_writer::end_tag('small');
+                    $divunderbar .= html_writer::div($small);
+                    $divunderbar .= html_writer::start_div('', array('id' => 'attendanceInfoBox', 'style' => 'display: none'));
+                    $divunderbar .= html_writer::end_div();
+                    $divunderbar .= html_writer::end_div();
+                    $this->content->text .= $divunderbar;
                 }
-                $this->content->text .= '</div><div><small id="hideOnHover">Passeu-hi el ratolí per a més informació.</small>
-                <div id="attendanceInfoBox" style="display: none;"></div></div>';
-
-
-                /*$this->content->text .= '<div class="progress">
-                                            <div class="progress-bar" role="progressbar" style="width: 34%" aria-valuenow="33" aria-valuemin="0" aria-valuemax="100"></div>
-                                            <div class="progress-bar bg-success" role="progressbar" style="width: 33%" aria-valuenow="33" aria-valuemin="0" aria-valuemax="100"></div>
-                                            <div class="progress-bar bg-info" role="progressbar" style="width: 33%" aria-valuenow="33" aria-valuemin="0" aria-valuemax="100"></div>
-                                        </div>';*/
 
                 $averagepercentage = 0;
                 $totaluf = 0;

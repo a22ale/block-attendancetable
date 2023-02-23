@@ -29,3 +29,7 @@ $string['studentcount'] = 'Alumnos a mostrar';
 $string['tablestudent'] = 'Alumnos';
 $string['tablepercentage'] = '% de asistencia';
 $string['tablemessage'] = 'Alumnos con la menor asistencia';
+$string['hovermessage'] = 'Pasa el ratón para más información';
+$string['showbarheader'] = 'Mostrar barra estudiantes';
+$string['yesoption'] = 'Sí';
+$string['nooption'] = 'No';

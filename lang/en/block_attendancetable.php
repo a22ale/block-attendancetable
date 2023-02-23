@@ -29,3 +29,7 @@ $string['studentcount'] = 'Student count';
 $string['tablestudent'] = 'Students';
 $string['tablepercentage'] = 'Attendance percentage';
 $string['tablemessage'] = 'Students with the lowest attendance';
+$string['hovermessage'] = 'Hover for more information';
+$string['showbarheader'] = 'Show student bar';
+$string['yesoption'] = 'Yes';
+$string['nooption'] = 'No';
