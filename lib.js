@@ -1,5 +1,4 @@
 function showInfo(imageDir, info) {
-    //console.log(document.querySelectorAll('[id^="btatt-"]'));
     document.getElementById("hideOnHover").style.display = "none";
     var htmlString = "<small>" + info[0] + "</small><br><a href='" + info[4] + "'><small>" +
         "<span>" + info[3] + "</span></a>&nbsp;-&nbsp;<span>" + info[2] + "</span></small>&nbsp;" +

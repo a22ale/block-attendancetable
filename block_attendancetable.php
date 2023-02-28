@@ -98,12 +98,17 @@ class block_attendancetable extends block_base
                         if ($logresult->statusid != NULL) {
                             $statussql = "SELECT * FROM mdl_attendance_statuses WHERE id = {$logresult->statusid};";
                             $statusresult = $DB->get_record_sql($statussql);
-                            $section = $DB->get_field('course_sections', 'section', array('id' => $cm->section, 'course' => $course->id), MUST_EXIST);
-                            $sectiontitle = get_section_name($course, $section);
+                            /*$section = $DB->get_field('course_sections', 'section', array('id' => $cm->section, 'course' => $course->id), MUST_EXIST);
+                            $sectiontitle = get_section_name($course, $section);*/
                             $attendanceurl = $CFG->wwwroot . '/mod/attendance/view.php?id=' . $cm->id;
-                            array_push($sessioninfo, [
+                            /*array_push($sessioninfo, [
                                 date("d/m/Y H:i", $session->sessdate), $statusresult->description,
                                 get_string(strtolower($statusresult->description), 'block_attendancetable'), $sectiontitle,
+                                $attendanceurl
+                            ]);*/
+                            array_push($sessioninfo, [
+                                date("d/m/Y H:i", $session->sessdate), $statusresult->description,
+                                get_string(strtolower($statusresult->description), 'block_attendancetable'), $attinst->name,
                                 $attendanceurl
                             ]);
                         }
@@ -184,11 +189,13 @@ class block_attendancetable extends block_base
                         //Records the current course's percentage on a different variable for later use
                         if ($ca->courseid == $id) {
                             $cm  = get_coursemodule_from_id('attendance', $ca->cmid, 0, false, MUST_EXIST);
-                            $section = $DB->get_field('course_sections', 'section', array('id' => $cm->section, 'course' => $course->id), MUST_EXIST);
-                            $sectiontitle = get_section_name($course, $section);
-                            
+                            /*$section = $DB->get_field('course_sections', 'section', array('id' => $cm->section, 'course' => $course->id), MUST_EXIST);
+                            $sectiontitle = get_section_name($course, $section);*/
+
+                            $url = $CFG->wwwroot . '/mod/attendance/view.php?id=' . $ca->cmid;
                             $totalcoursepercentage += $sectionpercentage;
-                            array_push($sectionpercentages, [$sectiontitle, $sectionpercentage]);
+                            //array_push($sectionpercentages, [$sectiontitle, $sectionpercentage, $url]);
+                            array_push($sectionpercentages, [$ca->attname, $sectionpercentage, $url]);
                             $totalcoursesection++;
                         }
                     }
@@ -225,12 +232,29 @@ class block_attendancetable extends block_base
 
                 $this->content->text .= html_writer::div(html_writer::table($table), '', ['id' => 'studenttable']);*/
 
-                $testdiv = html_writer::start_div();
-                $testdiv .= html_writer::div($percentagearray->sectionpercentages[1][1] . '%');
-                $testdiv .= html_writer::end_div();
-                $this->content->text .= $testdiv;
+                foreach ($percentagearray->sectionpercentages as $sectionpercentage) {
+                    $linkb = html_writer::tag('b', $sectionpercentage[0]);
+                    $sectioninfo = html_writer::tag('a', $linkb, array('href' => $sectionpercentage[2]));
+                    $sectioninfo .= '<br>';
+                    $sectioninfo .= html_writer::tag('span', $sectionpercentage[1] . '%');
+                    $infodiv = html_writer::start_div();
+                    $infodiv .= html_writer::div($sectioninfo);
+                    $infodiv .= html_writer::end_div();
+                    $this->content->text .= $infodiv;
+                }
+                $attetablelink = html_writer::tag('a', get_string('gototext', 'block_attendancetable'), array('href' => $CFG->wwwroot . '/report/attendancetable/?id=' . $id));
+                $this->content->text .= html_writer::tag('b', $attetablelink);
+                $avgpercentagetext = get_string('avgpercentage', 'block_attendancetable') . ' ' . $percentagearray->averagepercentage . '%';
+                $globalpercentages = html_writer::tag('span', $avgpercentagetext);
+                $globalpercentages .= '<br>';
+                $avgcoursetext = get_string('avgcoursepercentage', 'block_attendancetable') . ' ' . $percentagearray->averagecoursepercentage . '%';
+                $globalpercentages .= html_writer::tag('span', $avgcoursetext);
+                $percentagediv = html_writer::start_div();
+                $percentagediv .= html_writer::div($globalpercentages);
+                $percentagediv .= html_writer::end_div();
+                $this->content->text .= $percentagediv;
 
-                $formattributes = array('action' => $CFG->wwwroot . '/report/attendancetable/', 'method' => 'get');
+                /*$formattributes = array('action' => $CFG->wwwroot . '/report/attendancetable/', 'method' => 'get');
                 $form .= html_writer::start_tag('form', $formattributes);
                 $form .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'id', 'value' => $id));
                 $form .= html_writer::empty_tag('input', array('type' => 'submit', 'class' => 'btn btn-secondary', 'value' => get_string('gototext', 'block_attendancetable')));
@@ -239,7 +263,7 @@ class block_attendancetable extends block_base
                 $summarybutton .= html_writer::div($form, 'centerItem');
                 $summarybutton .= html_writer::end_div();
 
-                $this->content->text .= $summarybutton;
+                $this->content->text .= $summarybutton;*/
 
 
                 return $this->content;
