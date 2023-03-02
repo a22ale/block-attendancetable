@@ -22,20 +22,30 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+/* ---- Plugin related text ---- */
 $string['pluginname'] = 'Taula d\'Assistència';
 $string['attendancetable'] = 'Taula d\'assistència';
+
+/* ---- Global text ---- */
 $string['gototext'] = 'Resum d\'assistència';
+
+/* ---- Form related text ---- */
+$string['yesoption'] = 'Sí';
+$string['nooption'] = 'No';
 $string['studentcount'] = 'Alumnes a mostrar';
-$string['tablestudent'] = 'Alumnes';
-$string['tablepercentage'] = '% d\'assistència';
-$string['tablemessage'] = 'Alumnes amb la menor assistència';
-$string['hovermessage'] = 'Passeu-hi el ratolí per a més informació';
 $string['showbarheader'] = 'Mostrar barra estudiants';
 
-$string['yesoption'] = 'Yes';
-$string['nooption'] = 'No';
-
+/* ---- Student view text ---- */
 $string['present'] = 'Present';
 $string['absent'] = 'Absent';
 $string['late'] = 'Tard';
 $string['excused'] = 'Justificat';
+$string['avgpercentage'] = 'Percentatge sobre les sessions realitzades';
+$string['avgcoursepercentage'] = 'Percentatge sobre les sessions d\'aquest curs';
+$string['sectionpercentagetext'] = 'Percentatge sobre les sessions d\'aquesta secció';
+$string['hovermessage'] = 'Passeu-hi el ratolí per a més informació';
+
+/* ---- Teacher view text ---- */
+$string['tablestudent'] = 'Alumnes';
+$string['tablepercentage'] = '% d\'assistència';
+$string['tablemessage'] = 'Alumnes amb la menor assistència';

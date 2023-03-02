@@ -22,20 +22,30 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+/* ---- Plugin related text ---- */
 $string['pluginname'] = 'Attendance Table';
 $string['attendancetable'] = 'Attendance table';
-$string['gototext'] = 'Check attendance';
-$string['studentcount'] = 'Student count';
-$string['tablestudent'] = 'Students';
-$string['tablepercentage'] = 'Attendance percentage';
-$string['tablemessage'] = 'Students with the lowest attendance';
-$string['hovermessage'] = 'Hover for more information';
-$string['showbarheader'] = 'Show student bar';
 
+/* ---- Global text ---- */
+$string['gototext'] = 'Check attendance'; 
+
+/* ---- Form related text ---- */
 $string['yesoption'] = 'Yes';
 $string['nooption'] = 'No';
+$string['studentcount'] = 'Student count';
+$string['showbarheader'] = 'Show student bar';
 
+/* ---- Student view text ---- */
 $string['present'] = 'Present';
 $string['absent'] = 'Absent';
 $string['late'] = 'Late';
 $string['excused'] = 'Excused';
+$string['avgpercentage'] = 'Percentage over taken sessions';
+$string['avgcoursepercentage'] = 'Percentage over this course\'s sessions';
+$string['sectionpercentagetext'] = 'This sections\'s taken sessions';
+$string['hovermessage'] = 'Hover for more information';
+
+/* ---- Teacher view text ---- */
+$string['tablestudent'] = 'Students';
+$string['tablepercentage'] = 'Attendance percentage';
+$string['tablemessage'] = 'Students with the lowest attendance';
