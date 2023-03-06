@@ -23,7 +23,8 @@
  */
 
 defined('MOODLE_INTERNAL') || die();
-define('SORT_STUDENT', 0);
+require($CFG->dirroot . '/blocks/attendancetable/locallib.php');
+define('SORT_STUDENT', 6);
 define('SORT_TEACHER', 2);
 
 class block_attendancetable extends block_base
@@ -103,7 +104,9 @@ class block_attendancetable extends block_base
                             array_push($usersessions, [
                                 date("d/m/Y H:i", $attendancesession->sessdate), $attendancestatusresult->description,
                                 get_string(strtolower($attendancestatusresult->description), 'block_attendancetable'), $attinst->name,
-                                $attendanceurl
+                                $attendanceurl, strtotime(
+                                    date("m/", $attendancesession->sessdate) . "01" . date("/Y", $attendancesession->sessdate)
+                                ), $attendancesession->sessdate
                             ]);
                         }
                     }
@@ -137,7 +140,7 @@ class block_attendancetable extends block_base
                         $writerbar = html_writer::start_div('progress-bar '  . $barclass, array(
                             'onmouseover' => 'showInfo("../blocks/attendancetable/pix/",' .
                                 json_encode($session) . ')', 'role' => 'progress-bar', 'style' => 'width: ' . 100 / $usersessioncount . '%',
-                            'aria-value' => 100 / $usersessioncount
+                            'aria-value' => 100 / $usersessioncount, 'onclick' => 'onClick("' . $session[4] . 'curdate=' . $session[5] . '")'
                         ));
                         $writerbar .= html_writer::end_div();
                         $this->content->text .= $writerbar;
@@ -247,10 +250,12 @@ class block_attendancetable extends block_base
                         $userdata = new attendance_user_data($attstructure, $user->id);
                         $userpercentage = $this->get_attendance_percentages($userdata, $user->id);
 
-                        if ($userpercentage->totalsection != 0) array_push($shownusers, [
-                            $user->firstname, $user->id,
-                            round($userpercentage->averagepercentage, 2)
-                        ]);
+                        if ($userpercentage->totalsection != 0) {
+                            array_push($shownusers, [
+                                $user->firstname, $user->id,
+                                round($userpercentage->averagepercentage, 2)
+                            ]);
+                        }
                         $shownusers = $this->sort_array($shownusers, SORT_TEACHER);
                     }
                     $shownusers = array_slice($shownusers, 0, $this->config->amount ?: 5);
@@ -331,28 +336,19 @@ class block_attendancetable extends block_base
     }
 
     /**
-     * Sorts array for users shown on this block
+     * Returns the average course' and all courses' attendance for the specified student, and if
+     * the user is a student also returns each section's percentage for the specified course
      *
      * @param attendance_user_data $userdata The student's user data
      * @param string $userid The student's id
      * @param int $courseid The current course's id, only used if the current user is a student
-     * @return array The sorted array
+     * @return user_attendance_percentages An object containing both average percentages and number of sections, and 
+     * if the user is a student also an array containing all sections' info
      */
     private function get_attendance_percentages($userdata, $userid, $courseid = 0)
     {
-        $datatoreturn = new stdClass();
-        $datatoreturn->averagepercentage = 0;
-        $datatoreturn->averagecoursepercentage = 0;
-        $datatoreturn->totalsection = 0;
-
-        $totalpercentage = 0;
-        $totalsection = 0;
-
-        $courseinfo = new stdClass();
-        $courseinfo->totalpercentage = 0;
-        $courseinfo->coursesections = 0;
-
-        $coursesectionpercentages = [];
+        $userattendance = new user_attendance_percentages();
+        $courseinfo = new course_info();
 
         foreach ($userdata->coursesatts as $ca) {
             $userattendancesummary = new mod_attendance_summary($ca->attid, $userid);
@@ -364,32 +360,35 @@ class block_attendancetable extends block_base
             $usertotalstats += $userstats['T'] ?: 0;
             $usertotalstats += $userstats['J'] ?: 0;
             if ($usertotalstats != 0) {
-                $totalpercentage += $currentsectionpercentage;
-                $totalsection++;
+                $userattendance->totalpercentage += $currentsectionpercentage;
+                $userattendance->totalsection++;
                 if ($ca->courseid == $courseid) {
-                    $sectionpercentagearray = $this->get_current_course_percentages($ca, $coursesectionpercentages, $currentsectionpercentage, $courseinfo);
-                    $coursesectionpercentages = $sectionpercentagearray[0];
-                    $courseinfo = $sectionpercentagearray[1];
-                    $datatoreturn->sectionpercentages = $coursesectionpercentages;
+                    $this->get_current_course_percentages($ca, $userattendance, $currentsectionpercentage, $courseinfo);
                 }
             }
         }
 
-        $datatoreturn->averagecoursepercentage = round($sectionpercentagearray[1]->totalpercentage / $sectionpercentagearray[1]->coursesections, 2);
-        $datatoreturn->averagepercentage = round($totalpercentage / $totalsection, 2);
-        $datatoreturn->totalsection = $totalsection;
+        $userattendance->averagecoursepercentage = $courseinfo->get_average();
+        $userattendance->averagepercentage = $userattendance->get_average();
 
-        return $datatoreturn;
+        return $userattendance;
     }
 
-    private function get_current_course_percentages($ca, $coursesectionpercentages, $sectionpercentage, $courseinfo)
+    /**
+     * This function is called from get_attendance_percentages to get the course's section info
+     * if the user is a student
+     * 
+     * @param object $ca The current course attendance
+     * @param user_attendance_percentages $coursesectionpercentages The user's attendance information
+     * @param float $sectionpercentage Current section's attendance percentage
+     * @param object $courseinfo Stores the current course's total percentage and number of sections
+     */
+    private function get_current_course_percentages($ca, $userattendance, $sectionpercentage, $courseinfo)
     {
         global $CFG;
         $url = $CFG->wwwroot . '/mod/attendance/view.php?id=' . $ca->cmid;
         $courseinfo->totalpercentage += $sectionpercentage;
-        array_push($coursesectionpercentages, [$ca->attname, $sectionpercentage, $url]);
+        array_push($userattendance->sectionpercentages, [$ca->attname, $sectionpercentage, $url]);
         $courseinfo->coursesections++;
-
-        return array($coursesectionpercentages, $courseinfo);
     }
 }

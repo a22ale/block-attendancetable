@@ -6,3 +6,7 @@ function showInfo(imageDir, info) {
     document.getElementById("attendanceInfoBox").innerHTML = htmlString;
     document.getElementById("attendanceInfoBox").style.display = "block";
 }
+
+function onClick(url) {
+    window.location.href = '../' + url;
+}
