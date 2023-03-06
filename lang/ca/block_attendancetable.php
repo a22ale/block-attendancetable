@@ -40,10 +40,11 @@ $string['present'] = 'Present';
 $string['absent'] = 'Absent';
 $string['late'] = 'Tard';
 $string['excused'] = 'Justificat';
-$string['avgpercentage'] = 'Percentatge sobre les sessions realitzades';
+$string['avgpercentage'] = 'Percentatge sobre totes les sessions realitzades';
 $string['avgcoursepercentage'] = 'Percentatge sobre les sessions d\'aquest curs';
 $string['sectionpercentagetext'] = 'Percentatge sobre les sessions d\'aquesta secció';
 $string['hovermessage'] = 'Passeu-hi el ratolí per a més informació';
+$string['nosession'] = 'No estàs registrat a cap sessió';
 
 /* ---- Teacher view text ---- */
 $string['tablestudent'] = 'Alumnes';

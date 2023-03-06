@@ -42,19 +42,19 @@ class user_attendance_percentages
     public $totalsection = 0;
     /** @var array course's sections' percentages */
     public $sectionpercentages = [];
-    /** @var int all courses' total percentage  */
+    /** @var float all courses' total percentage  */
     public $totalpercentage = 0;
 
     /**
      * Returns the user's attendance average, rounded to the specified
-     * decimal count (2 by default)
+     * decimal count (1 by default)
      * 
      * @param int $decimals How many decimals you want your average to have
      * @return float The user's attendance average
      */
-    public function get_average($decimals = 2)
+    public function get_average($decimals = 1)
     {
-        return round($this->totalpercentage / $this->totalsection, $decimals);
+        return number_format($this->totalpercentage / $this->totalsection, $decimals, ',', '');
     }
 }
 
@@ -67,24 +67,80 @@ class user_attendance_percentages
  */
 class course_info
 {
-    /** @var int course's total percentage */
+    /** @var float course's total percentage */
     public $totalpercentage = 0;
     /** @var float course's number of attendance modules */
     public $coursesections = 0;
 
     /**
      * Returns the course's attendance average, rounded to the specified
-     * decimal count (2 by default)
+     * decimal count (1 by default)
      * 
      * @param int $decimals How many decimals you want your average to have
      * @return float The user's attendance average
      */
-    public function get_average($decimals = 2)
+    public function get_average($decimals = 1)
     {
-        return round($this->totalpercentage / $this->coursesections, $decimals);
+        return number_format($this->totalpercentage / $this->coursesections, $decimals, ',', '');
     }
 }
 
+/**
+ * Class that stores the user's session info
+ *
+ * @package    block_attendancetable
+ * @copyright  2023, Alexis Navas <a22alenavest@inspedralbes.cat> <alexisnavas98@hotmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
 class user_session
 {
+    /** @var string session's date in DD/MM/YYYY HH:mm format */
+    public $sessiondate;
+    /** @var string session's attendance in english */
+    public $attendanceenglish;
+    /** @var string session's localized attendance */
+    public $attendance;
+    /** @var string session's attendance name */
+    public $attendancename;
+    /** @var string url to mod_attendance's page -short- */
+    public $attendanceurl;
+    /** @var string url to mod_attendance's page -long- */
+    public $attendanceurllong;
+    /** @var int session's time in seconds */
+    public $sessiontime;
+
+    public function __construct($sessiondate, $attendanceenglish, $attendance, $attendancename, $attendanceurl, $attendanceurllong, $sessiontime)
+    {
+        $this->sessiondate = $sessiondate;
+        $this->attendanceenglish = $attendanceenglish;
+        $this->attendance = $attendance;
+        $this->attendancename = $attendancename;
+        $this->attendanceurl = $attendanceurl;
+        $this->attendanceurllong = $attendanceurllong;
+        $this->sessiontime = $sessiontime;
+    }
+}
+
+/**
+ * Class that stores the student's info
+ *
+ * @package    block_attendancetable
+ * @copyright  2023, Alexis Navas <a22alenavest@inspedralbes.cat> <alexisnavas98@hotmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class student_info
+{
+    /** @var string student's first name */
+    public $firstname;
+    /** @var int student's id */
+    public $id;
+    /** @var float student's attendance percentage */
+    public $averagepercentage;
+
+    public function __construct($firstname, $id, $averagepercentage)
+    {
+        $this->firstname = $firstname;
+        $this->id = $id;
+        $this->averagepercentage = $averagepercentage;
+    }
 }

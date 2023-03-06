@@ -24,8 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 require($CFG->dirroot . '/blocks/attendancetable/locallib.php');
-define('SORT_STUDENT', 6);
-define('SORT_TEACHER', 2);
+define('SORT_STUDENT', 'sessiontime');
+define('SORT_TEACHER', 'averagepercentage');
 
 class block_attendancetable extends block_base
 {
@@ -100,141 +100,149 @@ class block_attendancetable extends block_base
                         if ($logresult->statusid != NULL) {
                             $selectstatus = "SELECT * FROM mdl_attendance_statuses WHERE id = {$logresult->statusid};";
                             $attendancestatusresult = $DB->get_record_sql($selectstatus);
-                            $attendanceurl = $CFG->wwwroot . '/mod/attendance/view.php?id=' . $cm->id;
-                            array_push($usersessions, [
-                                date("d/m/Y H:i", $attendancesession->sessdate), $attendancestatusresult->description,
-                                get_string(strtolower($attendancestatusresult->description), 'block_attendancetable'), $attinst->name,
-                                $attendanceurl, strtotime(
-                                    date("m/", $attendancesession->sessdate) . "01" . date("/Y", $attendancesession->sessdate)
-                                ), $attendancesession->sessdate
-                            ]);
+                            $attendanceurl = 'mod/attendance/view.php?id=' . $cm->id;
+                            $attendanceurllong = $CFG->wwwroot . '/mod/attendance/view.php?id=' . $cm->id;
+
+                            $currentsession = new user_session(
+                                date("d/m/Y H:i", $attendancesession->sessdate),
+                                $attendancestatusresult->description,
+                                get_string(strtolower($attendancestatusresult->description), 'block_attendancetable'),
+                                $attinst->name,
+                                $attendanceurl,
+                                $attendanceurllong,
+                                $attendancesession->sessdate
+                            );
+                            array_push($usersessions, $currentsession);
                         }
                     }
                 }
 
-                if ($this->config->show ?? 1) {
-                    $usersessions = $this->sort_array($usersessions, SORT_STUDENT);
-                    $usersessioncount = count($usersessions);
-                    $buttoncount = 0;
-                    $this->content->text = html_writer::start_div("progress border border-secondary progressBar rounded");
-                    foreach ($usersessions as $index => $session) {
-                        $barclass = '';
-                        switch ($session[1]) {
-                            case 'Absent':
-                                $barclass = 'bg-danger';
-                                break;
-                            case 'Present':
-                                $barclass = 'bg-success';
-                                break;
-                            case 'Late':
-                                $barclass = 'bg-warning';
-                                break;
-                            case 'Excused':
-                                $barclass = 'bg-info';
-                                break;
-                        }
-                        if ($index < $usersessioncount - 1) {
-                            $barclass .= ' border-secondary border-right';
-                        }
+                if (count($usersessions) > 0) {
+                    if ($this->config->show ?? 1) {
+                        $usersessions = $this->sort_array($usersessions, SORT_STUDENT);
+                        $usersessioncount = count($usersessions);
+                        $this->content->text = html_writer::start_div("progress border border-secondary progressBar rounded");
+                        foreach ($usersessions as $index => $session) {
+                            $barclass = '';
+                            switch ($session->attendanceenglish) {
+                                case 'Absent':
+                                    $barclass = 'bg-danger';
+                                    break;
+                                case 'Present':
+                                    $barclass = 'bg-success';
+                                    break;
+                                case 'Late':
+                                    $barclass = 'bg-warning';
+                                    break;
+                                case 'Excused':
+                                    $barclass = 'bg-info';
+                                    break;
+                            }
+                            if ($index < $usersessioncount - 1) {
+                                $barclass .= ' border-secondary border-right';
+                            }
 
-                        $writerbar = html_writer::start_div('progress-bar '  . $barclass, array(
-                            'onmouseover' => 'showInfo("../blocks/attendancetable/pix/",' .
-                                json_encode($session) . ')', 'role' => 'progress-bar', 'style' => 'width: ' . 100 / $usersessioncount . '%',
-                            'aria-value' => 100 / $usersessioncount, 'onclick' => 'onClick("' . $session[4] . 'curdate=' . $session[5] . '")'
-                        ));
-                        $writerbar .= html_writer::end_div();
-                        $this->content->text .= $writerbar;
-                        $buttoncount++;
+                            $writerbar = html_writer::start_div('progress-bar '  . $barclass, array(
+                                'onmouseover' => 'showInfo("../blocks/attendancetable/pix/",' .
+                                    json_encode($session) . ')', 'role' => 'progress-bar', 'style' => 'width: ' . 100 / $usersessioncount . '%',
+                                'aria-value' => 100 / $usersessioncount, 'onclick' => 'onClick("' . $session->attendanceurl . '&view=1&curdate=' . $session->sessiontime . '")'
+                            ));
+                            $writerbar .= html_writer::end_div();
+                            $this->content->text .= $writerbar;
+                        }
+                        $this->content->text .= html_writer::end_div();
+                        $writerdivunderbar .= html_writer::start_div();
+                        $writersmall = html_writer::start_tag('small', array('id' => 'hideOnHover'));
+                        $writersmall .= get_string('hovermessage', 'block_attendancetable');
+                        $writersmall .= html_writer::end_tag('small');
+                        $writerdivunderbar .= html_writer::div($writersmall);
+                        $writerdivunderbar .= html_writer::start_div('', array('id' => 'attendanceInfoBox', 'style' => 'display: none'));
+                        $writerdivunderbar .= html_writer::end_div();
+                        $writerdivunderbar .= html_writer::end_div();
+                        $this->content->text .= $writerdivunderbar;
                     }
-                    $this->content->text .= html_writer::end_div();
-                    $writerdivunderbar .= html_writer::start_div();
-                    $writersmall = html_writer::start_tag('small', array('id' => 'hideOnHover'));
-                    $writersmall .= get_string('hovermessage', 'block_attendancetable');
-                    $writersmall .= html_writer::end_tag('small');
-                    $writerdivunderbar .= html_writer::div($writersmall);
-                    $writerdivunderbar .= html_writer::start_div('', array('id' => 'attendanceInfoBox', 'style' => 'display: none'));
-                    $writerdivunderbar .= html_writer::end_div();
-                    $writerdivunderbar .= html_writer::end_div();
-                    $this->content->text .= $writerdivunderbar;
+
+                    $userattendancepercentages = $this->get_attendance_percentages($userdata, $USER->id, $id);
+
+                    //Text shown on the average part
+                    $avgpercentagetext = get_string('avgpercentage', 'block_attendancetable') . ': ';
+                    $avgpercentagevalue = $userattendancepercentages->averagepercentage . '%';
+                    $avgcoursetext = get_string('avgcoursepercentage', 'block_attendancetable') . ': ';
+                    $avgcoursevalue = $userattendancepercentages->averagecoursepercentage . '%';
+
+                    $table = new html_table();
+                    $table->attributes['class'] = 'attendancetable';
+
+                    foreach ($userattendancepercentages->sectionpercentages as $sectionpercentage) {
+                        //Link to the current's section mod_attendance
+                        $linkrow = new html_table_row();
+                        $writerlinkb = html_writer::tag('b', $sectionpercentage[0]);
+                        $writerlink = html_writer::tag('a', $writerlinkb, array('href' => $sectionpercentage[2]));
+                        $linkcell = new html_table_cell();
+                        $linkcell = html_writer::start_div();
+                        $linkcell = html_writer::div($writerlink);
+                        $linkcell .= html_writer::end_div();
+                        $linkrow->cells[] = $linkcell;
+
+                        //Row containing this section's attendance percentage
+                        $percentagerow = new html_table_row();
+                        $messagecell = new html_table_cell();
+                        $messagecell = html_writer::start_div();
+                        $messagecell = html_writer::div(get_string('sectionpercentagetext', 'block_attendancetable') . ': ');
+                        $messagecell .= html_writer::end_div();
+                        $valuecell = new html_table_cell();
+                        $valuecell = html_writer::start_div();
+                        $valuecell .= html_writer::div($sectionpercentage[1] . '%');
+                        $valuecell .= html_writer::end_div();
+                        $percentagerow->cells[] = $messagecell;
+                        $percentagerow->cells[] = $valuecell;
+
+                        $table->data[] = $linkrow;
+                        $table->data[] = $percentagerow;
+                    }
+
+                    //Check report_attendancetable link
+                    $checklinkrow = new html_table_row();
+                    $writerchecklinkb = html_writer::tag('b', get_string('gototext', 'block_attendancetable'));
+                    $writerchecklink = html_writer::tag('a', $writerchecklinkb, array('href' => $CFG->wwwroot . '/report/attendancetable/?id=' . $id));
+                    $checklinkcell = new html_table_cell();
+                    $checklinkcell = html_writer::start_div();
+                    $checklinkcell = html_writer::div($writerchecklink);
+                    $checklinkcell .= html_writer::end_div();
+                    $checklinkrow->cells[] = $checklinkcell;
+
+                    //All courses' average
+                    $avgrow = new html_table_row();
+                    $avgpercentagetextcell = new html_table_cell();
+                    $avgpercentagetextcell = html_writer::start_div();
+                    $avgpercentagetextcell = html_writer::div($avgpercentagetext);
+                    $avgpercentagetextcell .= html_writer::end_div();
+                    $avgpercentagevaluecell = html_writer::start_div();
+                    $avgpercentagevaluecell .= html_writer::div($avgpercentagevalue);
+                    $avgpercentagevaluecell .= html_writer::end_div();
+                    $avgrow->cells[] = $avgpercentagetextcell;
+                    $avgrow->cells[] = $avgpercentagevaluecell;
+
+                    //Current course's average
+                    $courserow = new html_table_row();
+                    $coursepercentagetextcell = new html_table_cell();
+                    $coursepercentagetextcell = html_writer::start_div();
+                    $coursepercentagetextcell = html_writer::div($avgcoursetext);
+                    $coursepercentagetextcell .= html_writer::end_div();
+                    $coursepercentagevaluecell = html_writer::start_div();
+                    $coursepercentagevaluecell .= html_writer::div($avgcoursevalue);
+                    $coursepercentagevaluecell .= html_writer::end_div();
+                    $courserow->cells[] = $coursepercentagetextcell;
+                    $courserow->cells[] = $coursepercentagevaluecell;
+
+                    $table->data[] = $checklinkrow;
+                    $table->data[] = $avgrow;
+                    $table->data[] = $courserow;
+                    $this->content->text .= html_writer::div(html_writer::table($table), '', ['id' => 'attendancetable']);
+                } else {
+                    $this->content->text = get_string('nosession', 'block_attendancetable');
                 }
 
-                $userattendancepercentages = $this->get_attendance_percentages($userdata, $USER->id, $id);
-
-                //Text shown on the average part
-                $avgpercentagetext = get_string('avgpercentage', 'block_attendancetable') . ': ';
-                $avgpercentagevalue = $userattendancepercentages->averagepercentage . '%';
-                $avgcoursetext = get_string('avgcoursepercentage', 'block_attendancetable') . ': ';
-                $avgcoursevalue = $userattendancepercentages->averagecoursepercentage . '%';
-
-                $table = new html_table();
-                $table->attributes['class'] = 'attendancetable';
-
-                foreach ($userattendancepercentages->sectionpercentages as $sectionpercentage) {
-                    //Link to the current's section mod_attendance
-                    $linkrow = new html_table_row();
-                    $writerlinkb = html_writer::tag('b', $sectionpercentage[0]);
-                    $writerlink = html_writer::tag('a', $writerlinkb, array('href' => $sectionpercentage[2]));
-                    $linkcell = new html_table_cell();
-                    $linkcell = html_writer::start_div();
-                    $linkcell = html_writer::div($writerlink);
-                    $linkcell .= html_writer::end_div();
-                    $linkrow->cells[] = $linkcell;
-
-                    //Row containing this section's attendance percentage
-                    $percentagerow = new html_table_row();
-                    $messagecell = new html_table_cell();
-                    $messagecell = html_writer::start_div();
-                    $messagecell = html_writer::div(get_string('sectionpercentagetext', 'block_attendancetable') . ': ');
-                    $messagecell .= html_writer::end_div();
-                    $valuecell = new html_table_cell();
-                    $valuecell = html_writer::start_div();
-                    $valuecell .= html_writer::div($sectionpercentage[1] . '%');
-                    $valuecell .= html_writer::end_div();
-                    $percentagerow->cells[] = $messagecell;
-                    $percentagerow->cells[] = $valuecell;
-
-                    $table->data[] = $linkrow;
-                    $table->data[] = $percentagerow;
-                }
-
-                //Check report_attendancetable link
-                $checklinkrow = new html_table_row();
-                $writerchecklinkb = html_writer::tag('b', get_string('gototext', 'block_attendancetable'));
-                $writerchecklink = html_writer::tag('a', $writerchecklinkb, array('href' => $CFG->wwwroot . '/report/attendancetable/?id=' . $id));
-                $checklinkcell = new html_table_cell();
-                $checklinkcell = html_writer::start_div();
-                $checklinkcell = html_writer::div($writerchecklink);
-                $checklinkcell .= html_writer::end_div();
-                $checklinkrow->cells[] = $checklinkcell;
-
-                //All courses' average
-                $avgrow = new html_table_row();
-                $avgpercentagetextcell = new html_table_cell();
-                $avgpercentagetextcell = html_writer::start_div();
-                $avgpercentagetextcell = html_writer::div($avgpercentagetext);
-                $avgpercentagetextcell .= html_writer::end_div();
-                $avgpercentagevaluecell = html_writer::start_div();
-                $avgpercentagevaluecell .= html_writer::div($avgpercentagevalue);
-                $avgpercentagevaluecell .= html_writer::end_div();
-                $avgrow->cells[] = $avgpercentagetextcell;
-                $avgrow->cells[] = $avgpercentagevaluecell;
-
-                //Current course's average
-                $courserow = new html_table_row();
-                $coursepercentagetextcell = new html_table_cell();
-                $coursepercentagetextcell = html_writer::start_div();
-                $coursepercentagetextcell = html_writer::div($avgcoursetext);
-                $coursepercentagetextcell .= html_writer::end_div();
-                $coursepercentagevaluecell = html_writer::start_div();
-                $coursepercentagevaluecell .= html_writer::div($avgcoursevalue);
-                $coursepercentagevaluecell .= html_writer::end_div();
-                $courserow->cells[] = $coursepercentagetextcell;
-                $courserow->cells[] = $coursepercentagevaluecell;
-
-                $table->data[] = $checklinkrow;
-                $table->data[] = $avgrow;
-                $table->data[] = $courserow;
-                $this->content->text .= html_writer::div(html_writer::table($table), '', ['id' => 'attendancetable']);
 
                 return $this->content;
             } else if (
@@ -251,10 +259,12 @@ class block_attendancetable extends block_base
                         $userpercentage = $this->get_attendance_percentages($userdata, $user->id);
 
                         if ($userpercentage->totalsection != 0) {
-                            array_push($shownusers, [
-                                $user->firstname, $user->id,
-                                round($userpercentage->averagepercentage, 2)
-                            ]);
+                            $currentstudent = new student_info(
+                                $user->firstname,
+                                $user->id,
+                                floatval(str_replace(',', '.', $userpercentage->averagepercentage))
+                            );
+                            array_push($shownusers, $currentstudent);
                         }
                         $shownusers = $this->sort_array($shownusers, SORT_TEACHER);
                     }
@@ -281,10 +291,10 @@ class block_attendancetable extends block_base
                     $rows = new html_table_row();
                     $namecell = new html_table_cell();
                     $namecell = html_writer::start_div();
-                    $namecell = html_writer::link("{$CFG->wwwroot}/user/profile.php?id={$shownuser[1]}", $shownuser[0]);
+                    $namecell = html_writer::link("{$CFG->wwwroot}/user/profile.php?id={$shownuser->id}", $shownuser->firstname);
                     $namecell .= html_writer::end_div();
                     $percentangecell = html_writer::start_div();
-                    $percentangecell .= html_writer::div($shownuser[2] . "%");
+                    $percentangecell .= html_writer::div(number_format($shownuser->averagepercentage, 1, ',', '') . "%");
                     $percentangecell .= html_writer::end_div();
                     $rows->cells[] = $namecell;
                     $rows->cells[] = $percentangecell;
@@ -325,7 +335,7 @@ class block_attendancetable extends block_base
         $len = count($arr);
         for ($i = 0; $i < $len; $i++) {
             for ($j = 0; $j < $len - $i - 1; $j++) {
-                if ($arr[$j][$role] > $arr[$j + 1][$role]) {
+                if ($arr[$j]->$role > $arr[$j + 1]->$role) {
                     $temp = $arr[$j];
                     $arr[$j] = $arr[$j + 1];
                     $arr[$j + 1] = $temp;
@@ -353,7 +363,7 @@ class block_attendancetable extends block_base
         foreach ($userdata->coursesatts as $ca) {
             $userattendancesummary = new mod_attendance_summary($ca->attid, $userid);
             $usertotalstats = 0;
-            $currentsectionpercentage = floatval(format_float($userattendancesummary->get_all_sessions_summary_for($userid)->takensessionspercentage * 100));
+            $currentsectionpercentage = round(($userattendancesummary->get_all_sessions_summary_for($userid)->takensessionspercentage * 100), 1);
             $userstats = $userattendancesummary->get_taken_sessions_summary_for($userid)->userstakensessionsbyacronym[0] ?: null;
             $usertotalstats += $userstats['P'] ?: 0;
             $usertotalstats += $userstats['A'] ?: 0;
@@ -388,7 +398,7 @@ class block_attendancetable extends block_base
         global $CFG;
         $url = $CFG->wwwroot . '/mod/attendance/view.php?id=' . $ca->cmid;
         $courseinfo->totalpercentage += $sectionpercentage;
-        array_push($userattendance->sectionpercentages, [$ca->attname, $sectionpercentage, $url]);
+        array_push($userattendance->sectionpercentages, [$ca->attname, number_format($sectionpercentage, 1, ',', ''), $url]);
         $courseinfo->coursesections++;
     }
 }
