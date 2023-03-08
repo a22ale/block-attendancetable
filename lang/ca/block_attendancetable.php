@@ -28,6 +28,8 @@ $string['attendancetable'] = 'Taula d\'assistència';
 
 /* ---- Global text ---- */
 $string['gototext'] = 'Resum d\'assistència';
+$string['norecord'] = 'No s\'ha trobat cap registre d\'assistència per aquest curs';
+$string['notacourse'] = 'Ha ocurregut un error, assegureu-vos de que la pàgina actual sigui un curs';
 
 /* ---- Form related text ---- */
 $string['yesoption'] = 'Sí';

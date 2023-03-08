@@ -28,6 +28,8 @@ $string['attendancetable'] = 'Tabla de asistencia';
 
 /* ---- Global text ---- */
 $string['gototext'] = 'Resumen de asistencia';
+$string['norecord'] = 'No se ha encontrado ningún registro de asistencia para este curso';
+$string['notacourse'] = 'Ha ocurrido un error, asegúrese de que la página actual sea un curso';
 
 /* ---- Form related text ---- */
 $string['yesoption'] = 'Sí';

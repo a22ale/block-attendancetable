@@ -27,7 +27,9 @@ $string['pluginname'] = 'Attendance Table';
 $string['attendancetable'] = 'Attendance table';
 
 /* ---- Global text ---- */
-$string['gototext'] = 'Check attendance'; 
+$string['gototext'] = 'Check attendance';
+$string['norecord'] = 'No attendance record has been found for this course';
+$string['notacourse'] = 'An error occurred, make sure that the current location is a course';
 
 /* ---- Form related text ---- */
 $string['yesoption'] = 'Yes';

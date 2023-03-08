@@ -38,7 +38,12 @@ class block_attendancetable extends block_base
     {
         global $DB, $CFG, $USER, $COURSE;
         require_once $CFG->dirroot . '/mod/attendance/locallib.php';
-        $id = required_param('id', PARAM_INT);
+        $id = optional_param('id', -1, PARAM_INT);
+        if ($id == -1) {
+            $this->content->text = get_string('notacourse', 'block_attendancetable');
+            return $this->content;
+        }
+
         $allattendances = get_coursemodules_in_course('attendance', $id);
         $attendanceparams = new mod_attendance_view_page_params(); // Page parameters, necessary to create mod_attendance_structure object.
 
@@ -56,6 +61,7 @@ class block_attendancetable extends block_base
             $users = get_enrolled_users($context_course, '');
 
             $firstattendance = $allattendances[array_keys($allattendances)[0]];
+
             $course = $DB->get_record('course', array('id' => $id), '*', MUST_EXIST);
             $attendance = $DB->get_record('attendance', array('id' => $firstattendance->instance), '*', MUST_EXIST);
             $context = context_module::instance($firstattendance->id);
@@ -243,7 +249,6 @@ class block_attendancetable extends block_base
                     $this->content->text = get_string('nosession', 'block_attendancetable');
                 }
 
-
                 return $this->content;
             } else if (
                 has_capability('mod/attendance:takeattendances', $context) or
@@ -272,10 +277,8 @@ class block_attendancetable extends block_base
                 }
                 $this->content = new stdClass;
 
-
                 $this->content->text .= html_writer::div(get_string('tablemessage', 'block_attendancetable'));
                 $this->content->text .= html_writer::empty_tag('br');
-
 
                 $table = new html_table();
                 $head = new stdClass();
@@ -320,6 +323,9 @@ class block_attendancetable extends block_base
 
                 return $this->content;
             }
+        } else {
+            $this->content->text = get_string('norecord', 'block_attendancetable');
+            return $this->content;
         }
     }
 
@@ -401,4 +407,5 @@ class block_attendancetable extends block_base
         array_push($userattendance->sectionpercentages, [$ca->attname, number_format($sectionpercentage, 1, ',', ''), $url]);
         $courseinfo->coursesections++;
     }
+    
 }
