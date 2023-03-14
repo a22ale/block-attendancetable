@@ -8,7 +8,7 @@
 }
 
 .block_attendancetable .studenttable td,
-th {
+.block_attendancetable .studenttable th {
     border: 1px solid #000000;
     text-align: left;
     padding: 8px;
@@ -41,6 +41,15 @@ th {
     width: 75%;
 }
 
+.attendanceIcon {
+    padding-right: 10px;
+}
+
+/* Dashboard CSS */
+.block_attendancetable .smallText {
+    font-size: small;
+}
+
 /* ----- Global CSS ----- */
 .block_attendancetable .centerItem {
     margin: 10px;
@@ -53,4 +62,8 @@ th {
 
 .block_attendancetable .progress-bar {
     cursor: pointer;
+}
+
+.block_attendancetable .attendanceIcon {
+    width: 24px;
 }

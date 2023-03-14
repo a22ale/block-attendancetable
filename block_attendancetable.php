@@ -26,6 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 require($CFG->dirroot . '/blocks/attendancetable/locallib.php');
 define('SORT_STUDENT', 'sessiontime');
 define('SORT_TEACHER', 'averagepercentage');
+define('SORT_DASHBOARD', 'id');
 
 class block_attendancetable extends block_base
 {
@@ -39,10 +40,6 @@ class block_attendancetable extends block_base
         global $DB, $CFG, $USER, $COURSE;
         require_once $CFG->dirroot . '/mod/attendance/locallib.php';
         $id = optional_param('id', -1, PARAM_INT);
-        if ($id == -1) {
-            $this->content->text = get_string('notacourse', 'block_attendancetable');
-            return $this->content;
-        }
 
         $allattendances = get_coursemodules_in_course('attendance', $id);
         $attendanceparams = new mod_attendance_view_page_params(); // Page parameters, necessary to create mod_attendance_structure object.
@@ -53,6 +50,10 @@ class block_attendancetable extends block_base
         $attendanceparams->mode        = 1;
         $attendanceparams->groupby     = 'course';
         $attendanceparams->sesscourses = 'current';
+
+        if (self::on_site_page($this->page)) {
+            return self::show_dashboard_content($attstructure);
+        }
 
         if (count($allattendances) > 0) {
             $shownusers = [];
@@ -151,7 +152,8 @@ class block_attendancetable extends block_base
                             $writerbar = html_writer::start_div('progress-bar '  . $barclass, array(
                                 'onmouseover' => 'showInfo("../blocks/attendancetable/pix/",' .
                                     json_encode($session) . ')', 'role' => 'progress-bar', 'style' => 'width: ' . 100 / $usersessioncount . '%',
-                                'aria-value' => 100 / $usersessioncount, 'onclick' => 'onClick("' . $session->attendanceurl . '&view=1&curdate=' . $session->sessiontime . '")'
+                                'aria-value' => 100 / $usersessioncount, 'onclick' => 'onClick("' . $session->attendanceurl .
+                                    '&view=1&curdate=' . $session->sessiontime . '")'
                             ));
                             $writerbar .= html_writer::end_div();
                             $this->content->text .= $writerbar;
@@ -380,6 +382,8 @@ class block_attendancetable extends block_base
                 $userattendance->totalsection++;
                 if ($ca->courseid == $courseid) {
                     $this->get_current_course_percentages($ca, $userattendance, $currentsectionpercentage, $courseinfo);
+                } else if ($courseid == -1) {
+                    $this->dashboard_get_percentages($ca, $userattendance, $currentsectionpercentage, $courseinfo);
                 }
             }
         }
@@ -387,15 +391,19 @@ class block_attendancetable extends block_base
         $userattendance->averagecoursepercentage = $courseinfo->get_average();
         $userattendance->averagepercentage = $userattendance->get_average();
 
+        if ($courseid == -1) {
+            $this->get_each_course_percentage($userattendance);
+        }
+
         return $userattendance;
     }
 
     /**
      * This function is called from get_attendance_percentages to get the course's section info
-     * if the user is a student
+     * if the user is a student, shown on each course
      * 
      * @param object $ca The current course attendance
-     * @param user_attendance_percentages $coursesectionpercentages The user's attendance information
+     * @param user_attendance_percentages $userattendance The user's attendance information
      * @param float $sectionpercentage Current section's attendance percentage
      * @param object $courseinfo Stores the current course's total percentage and number of sections
      */
@@ -407,5 +415,259 @@ class block_attendancetable extends block_base
         array_push($userattendance->sectionpercentages, [$ca->attname, number_format($sectionpercentage, 1, ',', ''), $url]);
         $courseinfo->coursesections++;
     }
-    
+
+    /**
+     * This function is called from get_attendance_percentages to get the course's section info
+     * if the user is a student, shown on the dashboard
+     * 
+     * @param object $ca The current course attendance
+     * @param user_attendance_percentages $userattendance The user's attendance information
+     * @param float $sectionpercentage Current section's attendance percentage
+     * @param object $courseinfo Stores the current course's total percentage and number of sections
+     */
+    private function dashboard_get_percentages($ca, $userattendance, $sectionpercentage, $courseinfo)
+    {
+        global $CFG;
+        $sectioninfo = new user_section_info();
+        $sectioninfo->courseid = intval($ca->courseid);
+        $sectioninfo->attendancepercentage += $sectionpercentage;
+        $sectioninfo->coursename = $ca->coursefullname;
+        $userattendance->sections[] = $sectioninfo;
+
+        $url = $CFG->wwwroot . '/mod/attendance/view.php?id=' . $ca->cmid;
+        array_push($userattendance->sectionpercentages, [$ca->attname, number_format($sectionpercentage, 1, ',', ''), $url]);
+        $courseinfo->totalpercentage += $sectionpercentage;
+        $courseinfo->coursesections++;
+    }
+
+    /**
+     * This function is called from get_attendance_percentages to get each course's attendance percentage
+     * based on each section's percentage
+     * 
+     * @param user_attendance_percentages $userattendance The user's attendance information 
+     */
+    private function get_each_course_percentage($userattendance)
+    {
+        global $CFG;
+        $sectioninfo = new stdClass();
+        //Adds each section's percentage to each course
+        foreach ($userattendance->sections as $section) {
+            $courseid = $section->courseid;
+            $sectioninfo->$courseid->percentage += $section->attendancepercentage;
+            $sectioninfo->$courseid->sectioncount++;
+            $sectioninfo->$courseid->courseid = $courseid;
+            $sectioninfo->$courseid->coursename = $section->coursename;
+        }
+        //Gets the average attendance of each course
+        foreach ($sectioninfo as $course) {
+            $url = $CFG->wwwroot . '/course/view.php?id=' . $course->courseid;
+            $coursepercentage = new course_percentage(
+                number_format($course->percentage / $course->sectioncount, 1, ',', ''),
+                $course->courseid,
+                $url,
+                $course->coursename
+            );
+            $userattendance->coursepercentages[] = $coursepercentage;
+        }
+
+        $userattendance->coursepercentages = $this->sort_array($userattendance->coursepercentages, SORT_DASHBOARD);
+    }
+
+    public function show_dashboard_content($attstructure)
+    {
+        global $COURSE, $USER, $DB, $CFG;
+        $this->page->requires->js('/blocks/attendancetable/lib.js');
+
+        $studentinfo = new stdClass();
+        $attendanceparams = new mod_attendance_view_page_params(); // Page parameters, necessary to create mod_attendance_structure object.
+
+        $attendanceparams->studentid   = null;
+        $attendanceparams->view        = null;
+        $attendanceparams->curdate     = null;
+        $attendanceparams->mode        = 1;
+        $attendanceparams->groupby     = 'course';
+        $attendanceparams->sesscourses = 'current';
+
+        $attstructure = '';
+
+        $selectlog = "SELECT * FROM mdl_attendance_log WHERE studentid = {$USER->id} ORDER BY id ASC;";
+        $attendancelogresult = $DB->get_records_sql($selectlog);
+        $context = null;
+        $cid = 0;
+        if (count($attendancelogresult) > 0) {
+            foreach ($attendancelogresult as $log) {
+                $selectsession = "SELECT * FROM mdl_attendance_sessions WHERE id = {$log->sessionid};";
+                $attendancesessionresult = $DB->get_record_sql($selectsession);
+                $selectattendance = "SELECT * FROM mdl_attendance WHERE id = {$attendancesessionresult->attendanceid};";
+                $attendanceresult = $DB->get_record_sql($selectattendance);
+                $selectstatus = "SELECT * FROM mdl_attendance_statuses WHERE id = {$log->statusid};";
+                $attendancestatusresult = $DB->get_record_sql($selectstatus);
+                $selectmodule = "SELECT * FROM mdl_modules WHERE name = 'attendance';";
+                $moduleresult = $DB->get_record_sql($selectmodule);
+                $selectcourse = "SELECT * FROM mdl_course WHERE id = {$attendanceresult->course};";
+                $couseresult = $DB->get_record_sql($selectcourse);
+                $selectcm = "SELECT * FROM mdl_course_modules WHERE instance = {$attendanceresult->id} AND module = {$moduleresult->id};";
+                $cmresult = $DB->get_record_sql($selectcm);
+                $context = context_module::instance($cmresult->id);
+
+                if ($attstructure == '') {
+                    $attstructure = new mod_attendance_structure($attendanceresult, $cmresult, $COURSE, $context, $attendanceparams);
+                };
+                $cid = $cmresult->course;
+                $cmid = $cmresult->id;
+                $url = $CFG->wwwroot . '/course/view.php?id=' . $couseresult->id;
+                $attendanceurl = 'mod/attendance/view.php?id=' . $cmid;
+                $attendanceurllong = $CFG->wwwroot . '/mod/attendance/view.php?id=' . $cmid;
+                $currentsession = new user_session(
+                    date("d/m/Y H:i", $attendancesessionresult->sessdate),
+                    $attendancestatusresult->description,
+                    get_string(strtolower($attendancestatusresult->description), 'block_attendancetable'),
+                    $attendanceresult->name,
+                    $attendanceurl,
+                    $attendanceurllong,
+                    $attendancesessionresult->sessdate
+                );
+                $currentsession->coursename = $couseresult->fullname;
+                $currentsession->courseurl = $url;
+                $studentinfo->$cid[] = $currentsession;
+            }
+            if ($context == null) {
+                return;
+            }
+            if (
+                has_capability('mod/attendance:canbelisted', $context, null, false) &&
+                has_capability('mod/attendance:view', $context)
+            ) {
+                $coursecounter = 0;
+                $userdata = new attendance_user_data($attstructure, $USER->id);
+                $userattendancepercentages = $this->get_attendance_percentages($userdata, $USER->id, -1);
+
+                //Text shown on the average part
+                $avgpercentagetext = get_string('avgpercentage', 'block_attendancetable') . ': ';
+                $avgpercentagevalue = $userattendancepercentages->averagepercentage . '%';
+
+                $table = new html_table();
+                $table->attributes['class'] = 'attendancetable';
+                foreach ($studentinfo as $course) {
+                    //Link to the course, shown over each
+                    $writerlinkbarb = html_writer::tag('b', $course[0]->coursename);
+                    $writerlinkbar = html_writer::tag('a', $writerlinkbarb, array('href' => $course[0]->courseurl));
+                    $this->content->text .= $writerlinkbar;
+
+                    $writerdivunderbar = '';
+                    $usersessions = $this->sort_array($course, SORT_STUDENT);
+                    $usersessioncount = count($usersessions);
+                    $this->content->text .= html_writer::start_div("progress border border-secondary progressBar rounded");
+                    foreach ($usersessions as $index => $session) {
+                        $barclass = '';
+                        switch ($session->attendanceenglish) {
+                            case 'Absent':
+                                $barclass = 'bg-danger';
+                                break;
+                            case 'Present':
+                                $barclass = 'bg-success';
+                                break;
+                            case 'Late':
+                                $barclass = 'bg-warning';
+                                break;
+                            case 'Excused':
+                                $barclass = 'bg-info';
+                                break;
+                        }
+                        if ($index < $usersessioncount - 1) {
+                            $barclass .= ' border-secondary border-right';
+                        }
+
+                        $writerbar = html_writer::start_div('progress-bar '  . $barclass, array(
+                            'onmouseover' => 'showInfoDashboard("../blocks/attendancetable/pix/",' .
+                                json_encode($session) . ',' . $coursecounter . ')', 'role' => 'progress-bar', 'style' => 'width: ' .
+                                100 / $usersessioncount . '%', 'aria-value' => 100 / $usersessioncount,
+                            'onclick' => 'onClick("' . $session->attendanceurl . '&view=1&curdate=' . $session->sessiontime . '")'
+                        ));
+                        $writerbar .= html_writer::end_div();
+                        $this->content->text .= $writerbar;
+                    }
+
+                    $this->content->text .= html_writer::end_div();
+
+                    $attendancetext = html_writer::start_div('smallText');
+                    $attendancetext .= html_writer::start_span() . get_string('attendance', 'block_attendancetable') . ': ' . html_writer::end_span();
+                    $attendancetext .= html_writer::start_span() . $userattendancepercentages->coursepercentages[$coursecounter]->percentage . '%' .
+                        html_writer::end_span();
+                    $attendancetext .= html_writer::end_div();
+                    $this->content->text .= $attendancetext;
+
+                    $writerdivunderbar .= html_writer::start_div();
+                    $writersmall = html_writer::start_tag('small', array('class' => 'hideOnHover'));
+                    $writersmall .= get_string('hovermessage', 'block_attendancetable');
+                    $writersmall .= html_writer::end_tag('small');
+                    $writerdivunderbar .= html_writer::div($writersmall);
+                    $writerdivunderbar .= html_writer::start_div('', array('id' => 'attendanceInfoBox-' . $coursecounter, 'class' => 'attendanceInfoBox', 'style' => 'display: none'));
+                    $writerdivunderbar .= html_writer::end_div();
+                    $writerdivunderbar .= html_writer::end_div();
+                    $this->content->text .= $writerdivunderbar;
+
+                    $coursecounter++;
+                }
+            }
+            $userdata = new attendance_user_data($attstructure, $USER->id);
+            $userattendancepercentages = $this->get_attendance_percentages($userdata, $USER->id, -1);
+
+            //Text shown on the average part
+            $avgpercentagetext = get_string('avgpercentage', 'block_attendancetable') . ': ';
+            $avgpercentagevalue = $userattendancepercentages->averagepercentage . '%';
+
+            $table = new html_table();
+            $table->attributes['class'] = 'attendancetable';
+
+            //Check report_attendancetable link
+            $checklinkrow = new html_table_row();
+            $writerchecklinkb = html_writer::tag('b', get_string('gototext', 'block_attendancetable'));
+            $writerchecklink = html_writer::tag('a', $writerchecklinkb, array('href' => $CFG->wwwroot . '/report/attendancetable/?id=' . $cid));
+            $checklinkcell = new html_table_cell();
+            $checklinkcell = html_writer::start_div();
+            $checklinkcell = html_writer::div($writerchecklink);
+            $checklinkcell .= html_writer::end_div();
+            $checklinkrow->cells[] = $checklinkcell;
+
+            //All courses' average
+            $avgrow = new html_table_row();
+            $avgpercentagetextcell = new html_table_cell();
+            $avgpercentagetextcell = html_writer::start_div();
+            $avgpercentagetextcell = html_writer::div($avgpercentagetext);
+            $avgpercentagetextcell .= html_writer::end_div();
+            $avgpercentagevaluecell = html_writer::start_div();
+            $avgpercentagevaluecell .= html_writer::div($avgpercentagevalue);
+            $avgpercentagevaluecell .= html_writer::end_div();
+            $avgrow->cells[] = $avgpercentagetextcell;
+            $avgrow->cells[] = $avgpercentagevaluecell;
+
+            $table->data[] = $checklinkrow;
+            $table->data[] = $avgrow;
+            $this->content->text .= html_writer::div(html_writer::table($table), '', ['id' => 'attendancetable']);;
+        } else {
+            $this->content->text = get_string('nosession', 'block_attendancetable');
+        }
+
+        return $this->content;
+    }
+
+    public static function on_site_page($page = null)
+    {
+        global $PAGE;
+        $page = $page ?? $PAGE;
+        $context = $page->context ?? null;
+
+        if (!$page || !$context) {
+            return false;
+        } else if ($context->contextlevel === CONTEXT_SYSTEM && $page->requestorigin === 'restore') {
+            return false;
+        } else if ($context->contextlevel === CONTEXT_COURSE && $context->instanceid == SITEID) {
+            return true;
+        } else if ($context->contextlevel < CONTEXT_COURSE) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }

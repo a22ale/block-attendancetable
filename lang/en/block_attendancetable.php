@@ -30,6 +30,7 @@ $string['attendancetable'] = 'Attendance table';
 $string['gototext'] = 'Check attendance';
 $string['norecord'] = 'No attendance record has been found for this course';
 $string['notacourse'] = 'An error occurred, make sure that the current location is a course';
+$string['attendance'] = 'Attendance';
 
 /* ---- Form related text ---- */
 $string['yesoption'] = 'Yes';
@@ -45,6 +46,7 @@ $string['excused'] = 'Excused';
 $string['avgpercentage'] = 'Percentage over all taken sessions';
 $string['avgcoursepercentage'] = 'Percentage over this course\'s sessions';
 $string['sectionpercentagetext'] = 'This sections\'s taken sessions';
+$string['coursepercentagetext'] = 'This course\'s attendance percentage';
 $string['hovermessage'] = 'Hover for more information';
 $string['nosession'] = 'You have no session record';
 

@@ -44,6 +44,10 @@ class user_attendance_percentages
     public $sectionpercentages = [];
     /** @var float all courses' total percentage  */
     public $totalpercentage = 0;
+    /** @var array array containing user_section_info */
+    public $sections = [];
+    /** @var array array containing each courses' percentage */
+    public $coursepercentages = [];
 
     /**
      * Returns the user's attendance average, rounded to the specified
@@ -86,6 +90,24 @@ class course_info
 }
 
 /**
+ * Class that stores the section's attendance percentage and course id
+ *
+ * @package    block_attendancetable
+ * @copyright  2023, Alexis Navas <a22alenavest@inspedralbes.cat> <alexisnavas98@hotmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class user_section_info
+{
+    /** @var float section's percentage */
+    public $attendancepercentage = 0;
+    /** @var int course's id */
+    public $courseid = 0;
+    /** @var string course's name */
+    public $coursename = 0;
+}
+
+
+/**
  * Class that stores the user's session info
  *
  * @package    block_attendancetable
@@ -108,6 +130,10 @@ class user_session
     public $attendanceurllong;
     /** @var int session's time in seconds */
     public $sessiontime;
+    /** @var string course's name */
+    public $coursename;
+    /** @var string url to course */
+    public $courseurl;
 
     public function __construct($sessiondate, $attendanceenglish, $attendance, $attendancename, $attendanceurl, $attendanceurllong, $sessiontime)
     {
@@ -142,5 +168,32 @@ class student_info
         $this->firstname = $firstname;
         $this->id = $id;
         $this->averagepercentage = $averagepercentage;
+    }
+}
+
+/**
+ * Class that stores the course's shown info
+ *
+ * @package    block_attendancetable
+ * @copyright  2023, Alexis Navas <a22alenavest@inspedralbes.cat> <alexisnavas98@hotmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class course_percentage
+{
+    /** @var string course's percentage in string */
+    public $percentage;
+    /** @var int student's id */
+    public $id;
+    /** @var string course's url */
+    public $url;
+    /** @var string course's name */
+    public $coursename;
+
+    public function __construct($percentage, $id, $url, $coursename)
+    {
+        $this->percentage = $percentage;
+        $this->id = $id;
+        $this->url = $url;
+        $this->coursename = $coursename;
     }
 }

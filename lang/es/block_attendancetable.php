@@ -30,6 +30,7 @@ $string['attendancetable'] = 'Tabla de asistencia';
 $string['gototext'] = 'Resumen de asistencia';
 $string['norecord'] = 'No se ha encontrado ningún registro de asistencia para este curso';
 $string['notacourse'] = 'Ha ocurrido un error, asegúrese de que la página actual sea un curso';
+$string['attendance'] = 'Asistencia';
 
 /* ---- Form related text ---- */
 $string['yesoption'] = 'Sí';
@@ -45,6 +46,7 @@ $string['excused'] = 'Justificado';
 $string['avgpercentage'] = 'Porcentaje de todas las sesiones asistidas';
 $string['avgcoursepercentage'] = 'Porcentaje de sesiones de este curso';
 $string['sectionpercentagetext'] = 'Porcentaje de sesiones de esta sección';
+$string['coursepercentagetext'] = 'Porcentaje de asistencia de este curso';
 $string['hovermessage'] = 'Pasa el ratón para más información';
 $string['nosession'] = 'No tienes ninguna sesión registrada';
 
