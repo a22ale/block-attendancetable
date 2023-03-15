@@ -35,6 +35,14 @@ class block_attendancetable extends block_base
         $this->title = get_string('attendancetable', 'block_attendancetable');
     }
 
+    /**
+     * Specifies where the block can be used.
+     * @return array
+     */
+    public function applicable_formats() {
+        return array('all' => false, 'course-view' => true, 'my' => true);
+    }
+
     public function get_content()
     {
         global $DB, $CFG, $USER, $COURSE;
