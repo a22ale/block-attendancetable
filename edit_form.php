@@ -22,11 +22,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-class block_attendancetable_edit_form extends block_edit_form
-{
+class block_attendancetable_edit_form extends block_edit_form {
 
-    protected function specific_definition($mform)
-    {
+    protected function specific_definition($mform) {
         if (!self::on_site_page()) {
             // Section header title according to language file.
             $mform->addElement('header', 'config_header', get_string('blocksettings', 'block'));
@@ -36,7 +34,7 @@ class block_attendancetable_edit_form extends block_edit_form
             $mform->addElement('select', 'config_amount', get_string('studentcount', 'block_attendancetable'), $studentcount);
             $mform->setDefault('config_amount', 5);
 
-            //Enable/Disable option to know whether or not students can see their attendance bar
+            // Enable/Disable option to know whether or not students can see their attendance bar.
             $showarray = array(get_string('nooption', 'block_attendancetable'), get_string('yesoption', 'block_attendancetable'));
             $mform->addElement('select', 'config_show', get_string('showbarheader', 'block_attendancetable'), $showarray);
             $mform->setDefault('config_show', 1);
@@ -45,11 +43,8 @@ class block_attendancetable_edit_form extends block_edit_form
         }
     }
 
-    //If page is course, enable edit_form
-    public static function on_site_page($page = null)
-    {
-        global $PAGE;
-        $page = $page ?? $PAGE;
+    // If page is course, enable edit_form.
+    public static function on_site_page($page = null) {
         $context = $page->context ?? null;
 
         if (!$page || !$context) {

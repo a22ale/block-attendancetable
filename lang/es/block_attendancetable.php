@@ -54,5 +54,3 @@ $string['nosession'] = 'No tienes ninguna sesión registrada';
 $string['tablestudent'] = 'Alumnos';
 $string['tablepercentage'] = '% de asistencia';
 $string['tablemessage'] = 'Alumnos con la menor asistencia';
-
-

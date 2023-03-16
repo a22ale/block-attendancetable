@@ -21,8 +21,9 @@
  * @copyright  2023, Alexis Navas <a22alenavest@inspedralbes.cat> <alexisnavas98@hotmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2023031408;
+$plugin->version = 2023031500;
 $plugin->requires = 2020061500;
 $plugin->component = 'block_attendancetable';
 $plugin->dependencies = array('mod_attendance' => 2021050702);

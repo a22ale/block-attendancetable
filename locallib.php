@@ -32,8 +32,7 @@ require_once($CFG->dirroot . '/mod/attendance/locallib.php');
  * @copyright  2023, Alexis Navas <a22alenavest@inspedralbes.cat> <alexisnavas98@hotmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class user_attendance_percentages
-{
+class user_attendance_percentages {
     /** @var float user's average attedance for all courses */
     public $averagepercentage = 0;
     /** @var float user's average attedance for current course */
@@ -52,12 +51,11 @@ class user_attendance_percentages
     /**
      * Returns the user's attendance average, rounded to the specified
      * decimal count (1 by default)
-     * 
+     *
      * @param int $decimals How many decimals you want your average to have
      * @return float The user's attendance average
      */
-    public function get_average($decimals = 1)
-    {
+    public function get_average($decimals = 1) {
         return number_format($this->totalpercentage / $this->totalsection, $decimals, ',', '');
     }
 }
@@ -69,8 +67,7 @@ class user_attendance_percentages
  * @copyright  2023, Alexis Navas <a22alenavest@inspedralbes.cat> <alexisnavas98@hotmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class course_info
-{
+class course_info {
     /** @var float course's total percentage */
     public $totalpercentage = 0;
     /** @var float course's number of attendance modules */
@@ -79,12 +76,11 @@ class course_info
     /**
      * Returns the course's attendance average, rounded to the specified
      * decimal count (1 by default)
-     * 
+     *
      * @param int $decimals How many decimals you want your average to have
      * @return float The user's attendance average
      */
-    public function get_average($decimals = 1)
-    {
+    public function get_average($decimals = 1) {
         return number_format($this->totalpercentage / $this->coursesections, $decimals, ',', '');
     }
 }
@@ -96,8 +92,7 @@ class course_info
  * @copyright  2023, Alexis Navas <a22alenavest@inspedralbes.cat> <alexisnavas98@hotmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class user_section_info
-{
+class user_section_info {
     /** @var float section's percentage */
     public $attendancepercentage = 0;
     /** @var int course's id */
@@ -114,8 +109,7 @@ class user_section_info
  * @copyright  2023, Alexis Navas <a22alenavest@inspedralbes.cat> <alexisnavas98@hotmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class user_session
-{
+class user_session {
     /** @var string session's date in DD/MM/YYYY HH:mm format */
     public $sessiondate;
     /** @var string session's attendance in english */
@@ -135,8 +129,8 @@ class user_session
     /** @var string url to course */
     public $courseurl;
 
-    public function __construct($sessiondate, $attendanceenglish, $attendance, $attendancename, $attendanceurl, $attendanceurllong, $sessiontime)
-    {
+    public function __construct($sessiondate, $attendanceenglish, $attendance, $attendancename,
+    $attendanceurl, $attendanceurllong, $sessiontime) {
         $this->sessiondate = $sessiondate;
         $this->attendanceenglish = $attendanceenglish;
         $this->attendance = $attendance;
@@ -154,8 +148,7 @@ class user_session
  * @copyright  2023, Alexis Navas <a22alenavest@inspedralbes.cat> <alexisnavas98@hotmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class student_info
-{
+class student_info {
     /** @var string student's first name */
     public $firstname;
     /** @var int student's id */
@@ -163,8 +156,7 @@ class student_info
     /** @var float student's attendance percentage */
     public $averagepercentage;
 
-    public function __construct($firstname, $id, $averagepercentage)
-    {
+    public function __construct($firstname, $id, $averagepercentage) {
         $this->firstname = $firstname;
         $this->id = $id;
         $this->averagepercentage = $averagepercentage;
@@ -178,8 +170,7 @@ class student_info
  * @copyright  2023, Alexis Navas <a22alenavest@inspedralbes.cat> <alexisnavas98@hotmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class course_percentage
-{
+class course_percentage {
     /** @var string course's percentage in string */
     public $percentage;
     /** @var int student's id */
@@ -189,8 +180,7 @@ class course_percentage
     /** @var string course's name */
     public $coursename;
 
-    public function __construct($percentage, $id, $url, $coursename)
-    {
+    public function __construct($percentage, $id, $url, $coursename) {
         $this->percentage = $percentage;
         $this->id = $id;
         $this->url = $url;
